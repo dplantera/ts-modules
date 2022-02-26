@@ -1,0 +1,35 @@
+{
+  "extends": [
+    "config:base",
+    ":preserveSemverRanges"
+  ],
+  "labels": ["dependencies"],
+  "js": {},
+  "packageRules": [
+    {
+      "groupName": "jest",
+      "matchPackagePatterns": ["jest"],
+      "automerge": true,
+      "major": {
+        "automerge": false
+      },
+      "automergeType": "automerge type: update jest",
+      "automergeComment": "automerge comment: update jest"
+    },
+    {
+      "matchPackagePatterns": ["eslint"],
+      "labels": ["linting"],
+      "rangeStrategy": "pin"
+    },
+    {
+      "groupName": "linters",
+      "extends": ["packages:linters"],
+      "matchPackageNames": ["prettier"],
+      "matchPackagePatterns": ["^@typescript-eslint/"]
+    },
+    {
+      "matchDepTypes": ["optionalDependencies"],
+      "addLabels": ["optional"]
+    }
+  ]
+}
