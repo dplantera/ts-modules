@@ -2,14 +2,26 @@
   "name": "root",
   "private": true,
   "scripts": {
-    "clean": "rm -rf packages/**/lib",
-    "setup": "lerna run tsc && lerna bootstrap",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "dev": "turbo run dev",
+    "clean": "rimraf packages/**/lib packages/**/node_modules packages/**/package-lock.json ./package-lock.json packages/**/pnpm-lock.yaml ./pnpm-lock.yaml",
     "setup:clean": "npm run clean && npm run setup"
   },
   "devDependencies": {
-    "@types/node": "^17.0.21",
-    "lerna": "^4.0.0",
-    "typescript": "^4.5.5"
+    "@types/jest": "^27.0.0",
+    "@types/node": "^20.5.9",
+    "jest": "^27.0.0",
+    "rimraf": "^3.0.2",
+    "ts-jest": "^27.0.7",
+    "turbo": "^1.6.3",
+    "typescript": "^5.2.2",
+    "zod": "^3.19.1",
+    "lodash": "^4.17.21"
+  },
+  "peerDependencies": {
+    "pnpm": ">=7.18.1"
   },
   "workspaces": {
     "packages": [

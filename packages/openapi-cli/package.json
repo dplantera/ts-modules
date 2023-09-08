@@ -1,0 +1,16 @@
+{
+  "name": "@dsp/openapi-cli",
+  "private": true,
+  "scripts": {
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "dev": "turbo run dev",
+    "clean": "rimraf packages/**/lib packages/**/node_modules packages/**/package-lock.json",
+    "setup:clean": "npm run clean && npm run setup"
+  },
+  "devDependencies": {
+    "parcel": "^2.8.1",
+    "tsconfig": "workspace:*"
+  }
+}

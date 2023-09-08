@@ -8,8 +8,7 @@
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
   "directories": {
-    "lib": "lib",
-    "test": "__tests__"
+    "lib": "lib"
   },
   "files": [
     "lib"
@@ -25,21 +24,17 @@
     "tsc": "tsc",
     "test": "jest",
     "test:watch": "jest --watchAll",
-    "build": "tsc --build --clean && tsc -p tsconfig.json",
+    "build": "tsc --build --clean && tsc -p tsconfig.json"
   },
   "bugs": {
     "url": "https://github.com/dplantera/ts-modules/issues"
   },
   "devDependencies": {
-    "@types/jest": "^27.0.0",
-    "@types/node": "^16.11.0",
-    "fake-indexeddb": "^3.1.4",
-    "jest": "^27.0.0",
-    "ts-jest": "^27.0.7",
-    "typescript": "^4.3.5"
+    "fake-indexeddb": "^4.0.1",
+    "tsconfig": "workspace:*"
   },
   "peerDependencies": {
-    "@types/node": "^16.11.0",
-    "typescript": "^4.4.4"
+    "@types/node": ">=16.x.x",
+    "typescript": ">=4.4.4"
   }
 }
