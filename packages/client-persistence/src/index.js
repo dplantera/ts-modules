@@ -1,11 +1,6 @@
-import {IDBClient} from "./driver/IDBClient";
-import {StoreConfig} from "./driver/indexeddb.config";
-import {IDBRepository} from "./repositories/IDBRepository";
-import {Entity} from "./entities";
-import {Index} from "./driver/indexeddb.decorator";
-import {Store} from "./driver/indexeddb.decorator";
-import {setLogger} from "./logging";
-
-export {
-    IDBClient, StoreConfig, IDBRepository, Entity, Index, Store, setLogger
-}
+"use strict";
+exports.__esModule = true;
+exports.Repo = void 0;
+exports.Repo = {
+    create: function () { return ({ insert: function () { return console.log("inserting"); } }); }
+};

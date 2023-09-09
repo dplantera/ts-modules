@@ -1,5 +1,5 @@
 {
-  "name": "@dplan/client-persistence",
+  "name": "@dsp/client-persistence",
   "version": "1.0.6",
   "description": "Utils for client side persistence",
   "author": "danie <daniele.plantera@outlook.de>",
@@ -8,15 +8,11 @@
   "main": "lib/index.js",
   "typings": "lib/index.d.ts",
   "directories": {
-    "lib": "lib",
-    "test": "__tests__"
+    "lib": "lib"
   },
   "files": [
     "lib"
   ],
-  "publishConfig": {
-    "registry":"https://npm.pkg.github.com"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/dplantera/ts-modules.git"
@@ -25,18 +21,12 @@
     "tsc": "tsc",
     "test": "jest",
     "test:watch": "jest --watchAll",
-    "build": "tsc --build --clean && tsc -p tsconfig.json",
-  },
-  "bugs": {
-    "url": "https://github.com/dplantera/ts-modules/issues"
+    "build": "tsc --build --clean && tsc -p tsconfig.json"
   },
   "devDependencies": {
-    "@types/jest": "^27.0.0",
-    "@types/node": "^16.11.0",
     "fake-indexeddb": "^3.1.4",
-    "jest": "^27.0.0",
-    "ts-jest": "^27.0.7",
-    "typescript": "^4.3.5"
+    "tsconfig": "workspace:*",
+    "jest-environment-jsdom": "^29.6.4"
   },
   "peerDependencies": {
     "@types/node": "^16.11.0",
