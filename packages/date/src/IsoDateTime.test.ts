@@ -1,6 +1,5 @@
-import {IsoDateTime} from "./IsoDateTime";
 import {UtcDate} from "./UtcDate";
-import is = UtcDate.is;
+import {IsoDateTime} from "./IsoDateTime";
 
 describe("IsoDateTime", () => {
     const makeDate = () => "1990-12-01T00:00:00.000Z"
@@ -19,6 +18,11 @@ describe("IsoDateTime", () => {
         expect(isoDT.addSeconds(-1).toString()).toEqual("1990-11-30T23:59:59.000Z")
         expect(isoDT.addSeconds(-1).addSeconds(2).toString()).toEqual("1990-12-01T00:00:01.000Z")
         expect(isoDT.addYears(3).addYears(-6).addSeconds(-1).toString()).toEqual("1987-11-30T23:59:59.000Z")
+
+        // decimal values
+        expect(isoDT.addSeconds(-1.6).toString()).toEqual("1990-11-30T23:59:59.000Z")
+        expect(isoDT.addMonths(1.2).toString()).toEqual("1991-01-01T00:00:00.000Z")
+        expect(isoDT.addMonths(1.9).toString()).toEqual("1991-01-01T00:00:00.000Z")
     })
 
     test("change date", () => {
@@ -56,11 +60,40 @@ describe("IsoDateTime", () => {
         expect(isoDT.format("ddd, D. MMMM YYYY HH:mm Z")).toEqual("Sat, 1. December 1990 00:00 +00:00")
     })
 
-    test("add quarter", () => {
-        const a = makeDate();
-        const isoDT = IsoDateTime.of(a);
-        expect(isoDT.addQuarter().toString()).toEqual("1990-03-01T00:00:00.000Z")
-        expect(isoDT.addQuarter(2).toString()).toEqual("1990-06-01T00:00:00.000Z")
+    describe("addQuarter", () => {
+        const quarterCases = [
+            {
+                date: "1990-11-02T00:00:00.000Z",
+                addQuarter: -1,
+                expString: "1990-08-02T00:00:00.000Z",
+                expDate: (d: IsoDateTime) => d.addMonths(-3)
+            },
+            {
+                date: "1990-11-02T00:00:00.000Z",
+                addQuarter: 0,
+                expString: "1990-11-02T00:00:00.000Z",
+                expDate: (d: IsoDateTime) => d
+            },
+            {
+                date: "1990-11-02T00:00:00.000Z",
+                addQuarter: 1,
+                expString: "1991-02-02T00:00:00.000Z",
+                expDate: (d: IsoDateTime) => d.addMonths(3)
+            },
+            {
+                date: "1990-11-02T00:00:00.000Z",
+                addQuarter: 5,
+                expString: "1992-02-02T00:00:00.000Z",
+                expDate: (d: IsoDateTime) => d.addYears(1).addMonths(3)
+            }
+        ]
+        test.each(quarterCases)("add quarter: $date + ($addQuarter) = $expString", (quarterCase) => {
+            const isoDateTime = IsoDateTime.of(quarterCase.date);
+
+            expect(isoDateTime.toString()).toEqual(quarterCase.date)
+            expect(isoDateTime.addQuarter(quarterCase.addQuarter).toString()).toEqual(quarterCase.expString)
+            expect(isoDateTime.addQuarter(quarterCase.addQuarter).toString()).toEqual(quarterCase.expDate(isoDateTime).toString())
+        })
     })
 
     test("is on same date", () => {

@@ -3,18 +3,11 @@ import {UtcDate} from "./UtcDate";
 import {IsoDateTime} from "./IsoDateTime";
 
 
-interface IsoDate extends IsoDateApi {
-}
-export module IsoDate {
-    export function of(date: DateIn) {
-        return new IsoDateApi(new Date(date));
-    }
-
-}
-
-
-export class IsoDateApi {
+export class IsoDate {
     constructor(private date: Date) {
+    }
+    public static of(date: DateIn) {
+        return new IsoDate(new Date(date));
     }
 
     public toString(): string {
@@ -29,23 +22,23 @@ export class IsoDateApi {
     }
 
     addYears(inc?: number) {
-        return new IsoDateApi(UtcDate.addYears(this.date, inc));
+        return new IsoDate(UtcDate.add(this.date,'years', inc));
     }
 
     lastDayOfMonth() {
-        return new IsoDateApi(UtcDate.lastDayOfMonth(this.date))
+        return new IsoDate(UtcDate.lastDayOfMonth(this.date))
     }
 
     addDays(inc?: number) {
-        return new IsoDateApi(UtcDate.addDays(this.date, inc));
+        return new IsoDate(UtcDate.add(this.date,'days', inc));
     }
 
     addMonths(inc?: number) {
-        return new IsoDateApi(UtcDate.addMonths(this.date, inc));
+        return new IsoDate(UtcDate.add(this.date,'months', inc));
     }
 
     addQuarter(inc?: number) {
-        return new IsoDateApi(UtcDate.addQuarter(this.date, inc))
+        return new IsoDate(UtcDate.add(this.date, 'quarter',inc));
     }
 
     is(a: IsoDate, op: UtcDate.UtcCompareOperation, b: IsoDate, c?: IsoDate) {

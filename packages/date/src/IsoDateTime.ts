@@ -1,24 +1,15 @@
 import {DateIn, TZ} from "./date";
 import {UtcDate} from "./UtcDate";
-import {IsoDateApi} from "./IsoDate";
+import {IsoDate} from "./IsoDate";
 
 
-interface IsoDateTime extends IsoDateTimeApi {
-}
-
-export module IsoDateTime {
-    export function of(date: DateIn) {
-        return new IsoDateTimeApi(new Date(date));
-    }
-    export function clone(isoDateTime: IsoDateTime) {
-        return isoDateTime.clone(isoDateTime);
-    }
-}
-
-class IsoDateTimeApi {
+export class IsoDateTime {
     constructor(private date: Date) {
     }
 
+    public static of(date: DateIn) {
+        return new IsoDateTime(new Date(date));
+    }
     public toString(): string {
         return this.date.toISOString();
     }
@@ -27,48 +18,48 @@ class IsoDateTimeApi {
         return IsoDateTime.of(isoDateTime.date);
     }
 
-    format(fmt: string) {
+    format(fmt: UtcDate.Format) {
         return UtcDate.format(this.date, fmt);
     }
 
-    formatDE(fmt: string) {
+    formatDE(fmt: UtcDate.Format) {
         return UtcDate.formatTZ(this.date, fmt, "de", TZ.berlin);
     }
 
-    formatEN(fmt: string, tz: TZ = TZ.utc) {
+    formatEN(fmt: UtcDate.Format, tz: TZ = TZ.utc) {
         return UtcDate.formatTZ(this.date, fmt, "en-US", tz);
     }
 
     lastDayOfMonth() {
-        return new IsoDateTimeApi(UtcDate.lastDayOfMonth(this.date))
+        return new IsoDateTime(UtcDate.lastDayOfMonth(this.date))
     }
 
-    addDays(inc?: number) {
-        return new IsoDateTimeApi(UtcDate.addDays(this.date, inc));
+    addDays(inc?: UtcDate.IncrementOrDecrement) {
+        return new IsoDateTime(UtcDate.add(this.date, 'days',inc));
     }
 
-    addMonths(inc?: number) {
-        return new IsoDateTimeApi(UtcDate.addMonths(this.date, inc));
+    addMonths(inc?: UtcDate.IncrementOrDecrement) {
+        return new IsoDateTime(UtcDate.add(this.date, 'months',inc));
     }
 
-    addYears(inc?: number) {
-        return new IsoDateTimeApi(UtcDate.addYears(this.date, inc));
+    addYears(inc?: UtcDate.IncrementOrDecrement) {
+        return new IsoDateTime(UtcDate.add(this.date, 'years',inc));
     }
 
-    addMinutes(inc?: number) {
-        return new IsoDateTimeApi(UtcDate.addMinutes(this.date, inc));
+    addMinutes(inc?: UtcDate.IncrementOrDecrement) {
+        return new IsoDateTime(UtcDate.add(this.date, 'minutes',inc));
     }
 
-    addHours(inc?: number) {
-        return new IsoDateTimeApi(UtcDate.addHours(this.date, inc));
+    addHours(inc?: UtcDate.IncrementOrDecrement) {
+        return new IsoDateTime(UtcDate.add(this.date, 'hours',inc));
     }
 
-    addSeconds(inc?: number) {
-        return new IsoDateTimeApi(UtcDate.addSeconds(this.date, inc));
+    addSeconds(inc?: UtcDate.IncrementOrDecrement) {
+        return new IsoDateTime(UtcDate.add(this.date, 'seconds',inc));
     }
 
-    addQuarter(inc?: number) {
-        return new IsoDateTimeApi(UtcDate.addQuarter(this.date, inc))
+    addQuarter(inc?: UtcDate.IncrementOrDecrement) {
+        return new IsoDateTime(UtcDate.add(this.date, 'quarter',inc));
     }
 
     is(op: UtcDate.UtcCompareOperation, b: IsoDateTime, c?: IsoDateTime) {

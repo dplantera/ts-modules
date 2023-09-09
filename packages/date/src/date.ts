@@ -12,6 +12,9 @@ export const Locals = {
     en: () => new Intl.Locale("en-Us")
 }
 
+/**
+ * See {@link Date}
+ */
 export type DateIn = Date | string | number;
 
 
