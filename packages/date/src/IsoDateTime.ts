@@ -1,6 +1,7 @@
 import {DateIn, TZ} from "./date";
 import {UtcDate} from "./UtcDate";
 import {IsoDate} from "./IsoDate";
+import UtcDurationUnit = UtcDate.UtcDurationUnit;
 
 
 export class IsoDateTime {
@@ -14,10 +15,12 @@ export class IsoDateTime {
         return this.date.toISOString();
     }
 
-    clone(isoDateTime: IsoDateTime) {
-        return IsoDateTime.of(isoDateTime.date);
+    clone() {
+        return IsoDateTime.of(this.date);
     }
-
+    toDate(){
+        return new Date(this.date);
+    }
     format(fmt: UtcDate.Format) {
         return UtcDate.format(this.date, fmt);
     }
@@ -60,6 +63,14 @@ export class IsoDateTime {
 
     addQuarter(inc?: UtcDate.IncrementOrDecrement) {
         return new IsoDateTime(UtcDate.add(this.date, 'quarter',inc));
+    }
+
+    startOf(unit: UtcDurationUnit) {
+        return UtcDate.startOf(this.date, unit);
+    }
+
+    endOf(unit: UtcDurationUnit) {
+        return UtcDate.endOf(this.date, unit);
     }
 
     is(op: UtcDate.UtcCompareOperation, b: IsoDateTime, c?: IsoDateTime) {

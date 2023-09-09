@@ -1,4 +1,5 @@
 import{IsoDate} from "./IsoDate";
+import {UtcDate} from "./UtcDate";
 
 describe("IsoDate", () => {
     const makeDate = () => "1990-12-01"
@@ -73,4 +74,75 @@ describe("IsoDate", () => {
         expect(isoDate.addQuarter(quarterCase.addQuarter).toString()).toEqual(quarterCase.expDate(isoDate).toString())
     })
 
+    describe("endOf", () => {
+        const quarterCases = [
+            {
+                date: "1990-02-22",
+                unit: "year",
+                expString: "1990-12-31",
+                expDate: (d: IsoDate) => d.addMonths(10).addDays(9),
+            },
+            {
+                date: "1990-02-22",
+                unit: "month",
+                expString: "1990-02-28",
+                expDate: (d: IsoDate) => d.addDays(6)
+            },
+            {
+                date: "1990-02-22", // Thursday
+                unit: "week",
+                expString: "1990-02-25", // Sunday
+                expDate: (d: IsoDate) => d.addDays(3),
+            },
+            {
+                date: "1990-02-22",
+                unit: "quarter",
+                expString: "1990-03-31",
+                expDate: (d: IsoDate) => d.addMonths(1).addDays(9),
+            }
+        ] satisfies Array<{unit: UtcDate.UtcDurationUnit} & Record<string, unknown>>
+        test.each(quarterCases)("$date endOf($unit) = $expString", (quarterCase) => {
+            const isoDate = IsoDate.of(quarterCase.date);
+
+            expect(isoDate.toString()).toEqual(quarterCase.date)
+            expect(isoDate.endOf(quarterCase.unit).toString()).toEqual(quarterCase.expString)
+            expect(isoDate.endOf(quarterCase.unit).toString()).toEqual(quarterCase.expDate(isoDate).toString())
+        })
+    })
+
+    describe("startOf", () => {
+        const quarterCases = [
+            {
+                date: "1990-02-22",
+                unit: "year",
+                expString: "1990-01-01",
+                expDate: (d: IsoDate) => d.addMonths(-1).addDays(-21)
+            },
+            {
+                date: "1990-02-22",
+                unit: "month",
+                expString: "1990-02-01",
+                expDate: (d: IsoDate) => d.addDays(-21)
+            },
+            {
+                date: "1990-02-22", // Thursday
+                unit: "week",
+                expString: "1990-02-18", // Sunday
+                expDate: (d: IsoDate) => d.addDays(-4)
+            },
+            {
+                date: "1990-02-22", // Thursday
+                unit: "quarter",
+                expString: "1990-01-01", // Saturday
+                expDate: (d: IsoDate) => d.addMonths(-1).addDays(-21)
+            }
+        ] satisfies Array<{unit: UtcDate.UtcDurationUnit} & Record<string, unknown>>
+        test.each(quarterCases)("$date endOf($unit) = $expString", (quarterCase) => {
+            const isoDate = IsoDate.of(quarterCase.date);
+
+            expect(isoDate.toString()).toEqual(quarterCase.date)
+            expect(isoDate.startOf(quarterCase.unit).toString()).toEqual(quarterCase.expString)
+            expect(isoDate.startOf(quarterCase.unit).toString()).toEqual(quarterCase.expDate(isoDate).toString())
+        })
+    })
 })

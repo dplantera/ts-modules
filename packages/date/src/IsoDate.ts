@@ -1,6 +1,7 @@
 import {DateIn, TZ} from "./date";
 import {UtcDate} from "./UtcDate";
 import {IsoDateTime} from "./IsoDateTime";
+import UtcDurationUnit = UtcDate.UtcDurationUnit;
 
 
 export class IsoDate {
@@ -12,6 +13,10 @@ export class IsoDate {
 
     public toString(): string {
         return this.format("YYYY-MM-DD");
+    }
+
+    clone() {
+        return IsoDateTime.of(this.date);
     }
 
     format(fmt: string) {
@@ -50,5 +55,25 @@ export class IsoDate {
             case "sameOrAfter":
                 return UtcDate.is(a.date, op, b.date);
         }
+    }
+
+    startOf(unit: UtcDurationUnit) {
+        const d = new Date(this.date);
+        const start = UtcDate.startOf(this.date, unit);
+        this.updateFromDateMutable(d, start);
+        return new IsoDate(d);
+    }
+
+    endOf(unit: UtcDurationUnit) {
+        const d = new Date(this.date);
+        const end = UtcDate.endOf(this.date, unit);
+        this.updateFromDateMutable(d, end);
+        return new IsoDate(d);
+    }
+
+    private updateFromDateMutable(current: Date, update: Date) {
+        current.setUTCFullYear(update.getUTCFullYear());
+        current.setUTCMonth(update.getUTCMonth());
+        current.setUTCDate(update.getUTCDate());
     }
 }

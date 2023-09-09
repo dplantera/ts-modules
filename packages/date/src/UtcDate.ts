@@ -6,7 +6,7 @@ import quarterOfYear from "dayjs/plugin/quarterOfYear"
 import isSameOrAfter from "dayjs/plugin/isSameOrAfter"
 import isBetween from "dayjs/plugin/isBetween"
 import duration from "dayjs/plugin/duration"
-import {DateIn, TZ} from "./date";
+import {DateIn, Local, TZ} from "./date";
 
 import "dayjs/locale/de"
 import "dayjs/locale/en"
@@ -22,6 +22,7 @@ export module UtcDate {
     dayjs.extend(isBetween)
 
     export type UtcCompareOperation = 'between' | 'before' | 'after' | 'sameOrAfter';
+    export type UtcDurationUnit = 'year' | 'month' | 'week' | 'quarter';
     export type UtcChangeOperation = 'years' | 'months' | 'days' | 'hours'| 'minutes'| 'seconds' | 'quarter';
     /** A positive or negative integer to in- or decrement a current state. Decimals will be stripped / ignored */
     export type IncrementOrDecrement = number;
@@ -29,6 +30,11 @@ export module UtcDate {
     export type Format = string;
     export function localTZ() {
         return Intl.DateTimeFormat().resolvedOptions().timeZone;
+    }
+
+    /** Unsafe access the internal implementation of the date library https://day.js.org/en/ */
+    export function unsafeAccessToDateLibBackend(){
+        return dayjs
     }
 
     /** Create a new date representing the lad day of the month for the giving date */
@@ -41,6 +47,24 @@ export module UtcDate {
         n.setUTCDate(0);
         return n;
 
+    }
+
+    /** Local preset controls the end of the week (default is Saturday). For "de" the end of the week is Sunday */
+    export function endOf(date:DateIn, unit: UtcDurationUnit, local: Local = Local.de){
+        const n = new Date(date);
+        const utc = dayjs.utc(n).locale(local);
+        return utc.endOf(unit).toDate();
+    }
+
+    /** Local preset controls the start of the week (default is Sunday). For "de" the start of the week is Monday */
+    export function startOf(date:DateIn, unit: UtcDurationUnit, local: Local = Local.de){
+        const n = new Date(date);
+        const utc = dayjs.utc(n).locale(local);
+        return utc.startOf(unit).toDate();
+    }
+
+    export function quarter(date:DateIn) : number{
+        return dayjs.utc(date).quarter();
     }
 
     /** Immutable change the provided date. */
