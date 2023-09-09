@@ -2,11 +2,11 @@
   "name": "root",
   "private": true,
   "scripts": {
-    "build": "turbo build",
-    "build:rebuild": "turbo clean & turbo build",
-    "test": "turbo test",
-    "lint": "turbo lint",
-    "clean": "turbo clean"
+    "build:rebuild": "turbo clean & turbo build --force",
+    "ws:build": "turbo build",
+    "ws:test": "turbo test",
+    "ws:lint": "turbo lint",
+    "ws:clean": "turbo clean"
   },
   "devDependencies": {
     "@types/jest": "^27.0.0",
