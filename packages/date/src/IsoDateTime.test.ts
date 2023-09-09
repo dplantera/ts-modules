@@ -53,4 +53,18 @@ describe("IsoDateTime", () => {
         expect(isoDT.formatEN("ddd, D. MMMM YYYY HH:mm Z", "Europe/Berlin")).toEqual("Sat, 1. December 1990 01:00 +01:00")
         expect(isoDT.format("ddd, D. MMMM YYYY HH:mm Z")).toEqual("Sat, 1. December 1990 00:00 +00:00")
     })
+
+    test("add quarter", () => {
+        const a = makeDate();
+        const isoDT = IsoDateTime.of(a);
+        expect(isoDT.addQuarter().toString()).toEqual("1990-03-01T00:00:00.000Z")
+        expect(isoDT.addQuarter(2).toString()).toEqual("1990-06-01T00:00:00.000Z")
+    })
+
+    test("is", () => {
+        const a = makeDate();
+        const isoDT = IsoDateTime.of(a);
+        expect(isoDT.addQuarter().toString()).toEqual("1990-03-01T00:00:00.000Z")
+        expect(isoDT.addQuarter(2).toString()).toEqual("1990-06-01T00:00:00.000Z")
+    })
 })

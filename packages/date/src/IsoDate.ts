@@ -2,42 +2,48 @@ import {DateIn, TZ} from "./date";
 import {UtcDate} from "./UtcDate";
 
 
-export type IsoDate = IsoDate._IsoDate;
+interface IsoDate extends IsoDateApi {
+}
 export module IsoDate {
-    export type _IsoDate = IsoDate;
     export function of(date: DateIn) {
-        return new IsoDate(new Date(date));
+        return new IsoDateApi(new Date(date));
     }
 
-    class IsoDate {
-        constructor(private date: Date) {
-        }
+}
 
-        public toString(): string {
-            return this.format("YYYY-MM-DD");
-        }
 
-        format(fmt: string) {
-            if(/(hHmsSZaAxXk)/ug.test(fmt)){
-                throw new Error("It is not allowed to apply time formats on IsoDate like hh:mm:ss or timezone Z. Only date formats are allowed e.g. YYYY-MM-DD");
-            }
-            return UtcDate.format(this.date, fmt);
-        }
+export class IsoDateApi {
+    constructor(private date: Date) {
+    }
 
-        addYears(inc?: number) {
-            return new IsoDate(UtcDate.addYear(this.date, inc));
-        }
+    public toString(): string {
+        return this.format("YYYY-MM-DD");
+    }
 
-        lastDayOfMonth() {
-            return new IsoDate(UtcDate.lastDayOfMonth(this.date))
+    format(fmt: string) {
+        if (/(hHmsSZaAxXk)/ug.test(fmt)) {
+            throw new Error("It is not allowed to apply time formats on IsoDate like hh:mm:ss or timezone Z. Only date formats are allowed e.g. YYYY-MM-DD");
         }
+        return UtcDate.format(this.date, fmt);
+    }
 
-        addDays(inc?: number) {
-            return new IsoDate(UtcDate.addDay(this.date, inc));
-        }
+    addYears(inc?: number) {
+        return new IsoDateApi(UtcDate.addYears(this.date, inc));
+    }
 
-        addMonths(inc?: number) {
-            return new IsoDate(UtcDate.addMonth(this.date, inc));
-        }
+    lastDayOfMonth() {
+        return new IsoDateApi(UtcDate.lastDayOfMonth(this.date))
+    }
+
+    addDays(inc?: number) {
+        return new IsoDateApi(UtcDate.addDays(this.date, inc));
+    }
+
+    addMonths(inc?: number) {
+        return new IsoDateApi(UtcDate.addMonths(this.date, inc));
+    }
+
+    addQuarter(inc?: number) {
+        return new IsoDateApi(UtcDate.addQuarter(this.date, inc))
     }
 }

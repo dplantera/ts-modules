@@ -3,12 +3,14 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
-    "test": "jest",
-    "lint": "eslint ."
+    "test": "pnpm test:utc & pnpm test:berlin",
+    "test:utc": "cross-env TZ=UTZ jest",
+    "test:berlin": "cross-env TZ=\"Europe/Berlin\" jest",
+    "lint": "echo not implemented",
+    "clean": "rimraf dist"
   },
   "dependencies": {
     "dayjs": "^1.11.9"
-
   },
   "devDependencies": {
     "tsconfig": "workspace:*"

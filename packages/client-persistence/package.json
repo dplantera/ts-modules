@@ -5,13 +5,13 @@
   "author": "danie <daniele.plantera@outlook.de>",
   "homepage": "https://github.com/dplantera/ts-modules#readme",
   "license": "ISC",
-  "main": "lib/index.js",
-  "typings": "lib/index.d.ts",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
   "directories": {
-    "lib": "lib"
+    "dist": "dist"
   },
   "files": [
-    "lib"
+    "dist"
   ],
   "repository": {
     "type": "git",
@@ -21,7 +21,8 @@
     "tsc": "tsc",
     "test": "jest",
     "test:watch": "jest --watchAll",
-    "build": "tsc --build --clean && tsc -p tsconfig.json"
+    "build": "tsc --build --clean && tsc -p tsconfig.json",
+    "clean": "rimraf dist"
   },
   "devDependencies": {
     "fake-indexeddb": "^3.1.4",

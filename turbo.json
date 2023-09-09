@@ -2,28 +2,21 @@
   "$schema": "https://turbo.build/schema.json",
   "pipeline": {
     "build": {
-      "outputs": [
-        "lib/**"
-      ]
+      "inputs": [ "src/**/*.ts" ],
+      "dependsOn": ["lint", "test"],
+      "outputs": ["dist/**"]
     },
     "lint": {
-      "outputs": []
+      "inputs": [ "src/**/*.ts" ]
     },
     "test": {
-      "inputs": [
-        "src/**/*.tsx",
-        "src/**/*.ts",
-        "test/**/*.ts",
-        "test/**/*.tsx"
-      ]
+      "inputs": [ "src/**/*.ts" ]
     },
-    "deploy": {
-      "dependsOn": [
-        "build",
-        "test",
-        "lint"
-      ],
-      "outputs": []
+    "clean": {
+      "cache": false
     }
-  }
+  },
+  "globalDependencies": [
+    "tsconfig.json"
+  ]
 }

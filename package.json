@@ -2,9 +2,11 @@
   "name": "root",
   "private": true,
   "scripts": {
-    "clean": "rm -rf packages/**/lib",
-    "setup": "lerna run tsc && lerna bootstrap",
-    "setup:clean": "npm run clean && npm run setup"
+    "build": "turbo build",
+    "build:rebuild": "turbo clean & turbo build",
+    "test": "turbo test",
+    "lint": "turbo lint",
+    "clean": "turbo clean"
   },
   "devDependencies": {
     "@types/jest": "^27.0.0",
@@ -15,7 +17,10 @@
     "turbo": "^1.10.13",
     "typescript": "^5.2.2",
     "zod": "^3.22.2",
-    "lodash": "^4.17.21"
+    "lodash": "^4.17.21",
+    "cross-env": "^7.0.3",
+    "run-parallel": "^1.2.0",
+    "run-series": "^1.1.9"
   },
   "packageManager": "pnpm@8.7.4"
 }

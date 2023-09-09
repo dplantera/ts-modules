@@ -12,7 +12,7 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "experimentalDecorators": true,
-    "outDir": "./lib",
+    "outDir": "dist",
     "declaration": true
   },
   "include": [
