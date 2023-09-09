@@ -1,4 +1,6 @@
 import {IsoDateTime} from "./IsoDateTime";
+import {UtcDate} from "./UtcDate";
+import is = UtcDate.is;
 
 describe("IsoDateTime", () => {
     const makeDate = () => "1990-12-01T00:00:00.000Z"
@@ -61,10 +63,46 @@ describe("IsoDateTime", () => {
         expect(isoDT.addQuarter(2).toString()).toEqual("1990-06-01T00:00:00.000Z")
     })
 
-    test("is", () => {
+    test("is on same date", () => {
         const a = makeDate();
         const isoDT = IsoDateTime.of(a);
-        expect(isoDT.addQuarter().toString()).toEqual("1990-03-01T00:00:00.000Z")
-        expect(isoDT.addQuarter(2).toString()).toEqual("1990-06-01T00:00:00.000Z")
+        expect(isoDT.is( 'sameOrAfter', isoDT)).toBeTruthy();
+        expect(isoDT.is( 'between', isoDT, isoDT)).toBeFalsy();
+        expect(isoDT.is( 'before', isoDT)).toBeFalsy();
+        expect(isoDT.is( 'after', isoDT)).toBeFalsy();
+    })
+    test("is on different dates", () => {
+        const a = makeDate();
+        const between = IsoDateTime.of(a);
+        const before = between.addSeconds(-1);
+        const after = between.addSeconds(1);
+
+        expect(before.is( 'before', after)).toBeTruthy();
+        expect(before.is( 'after', after, between)).toBeFalsy();
+        expect(before.is( 'between', after)).toBeFalsy();
+        expect(before.is( 'sameOrAfter', after)).toBeFalsy();
+        expect(before.is( 'sameOrAfter', between)).toBeFalsy();
+
+        expect(after.is( 'after', before, between)).toBeTruthy();
+        expect(after.is( 'between', before)).toBeFalsy();
+        expect(after.is( 'sameOrAfter', before)).toBeTruthy();
+        expect(after.is( 'sameOrAfter', between)).toBeTruthy();
+
+        expect(between.is( 'after', after)).toBeFalsy();
+        expect(between.is( 'after', before)).toBeTruthy();
+        expect(between.is( 'after', between)).toBeFalsy();
+
+        expect(between.is( 'before', after)).toBeTruthy();
+        expect(between.is( 'before', before)).toBeFalsy();
+        expect(between.is( 'before', between)).toBeFalsy();
+
+        expect(between.is( 'sameOrAfter', after)).toBeFalsy();
+        expect(between.is( 'sameOrAfter', before)).toBeTruthy();
+        expect(between.is( 'sameOrAfter', between)).toBeTruthy();
+
+        expect(between.is( 'between', after, before)).toBeTruthy();
+        expect(between.is( 'between', between)).toBeFalsy();
+        expect(between.is( 'between', between, after)).toBeFalsy();
+        expect(between.is( 'between', between, before)).toBeFalsy();
     })
 })

@@ -18,6 +18,7 @@ export module UtcDate {
     dayjs.extend(isSameOrAfter)
     dayjs.extend(isBetween)
 
+    export type UtcCompareOperation = 'between' |  'before' | 'after' | 'sameOrAfter';
     export function localTZ() {
         return Intl.DateTimeFormat().resolvedOptions().timeZone;
     }
@@ -74,12 +75,22 @@ export module UtcDate {
         return dayjs.utc(n).quarter(inc).toDate();
     }
 
-    export function is(date: DateIn,  test: 'before' | 'after' | 'sameOrAfter', otherDate: DateIn):boolean;
-    export function is(date: DateIn,  test: 'between' , otherDate: DateIn, otherEndDate: DateIn):boolean;
-    export function is(date: DateIn,  test: 'between' |  'before' | 'after' | 'sameOrAfter' , otherDate: DateIn, otherEndDate?: DateIn):boolean{
+    export function formatTZ(date: DateIn, format: string, locale: "de" | "en-US" = "de", timeZone: TZ = TZ.berlin) {
+        let utc = dayjs.utc(date);
+        let utcToX = timeZone !== TZ.utc ? utc.tz(timeZone) : utc;
+        return utcToX.locale(locale).format(format)
+    }
+
+    export function format(date: DateIn, format: string) {
+        return dayjs.utc(date).format(format)
+    }
+
+    export function is(date: DateIn,  op: Exclude<UtcCompareOperation, 'between'>, otherDate: DateIn):boolean;
+    export function is(date: DateIn,  op: Extract<UtcCompareOperation, 'between'> , otherDate: DateIn, otherEndDate: DateIn):boolean;
+    export function is(date: DateIn,  op: UtcCompareOperation , otherDate: DateIn, otherEndDate?: DateIn):boolean{
         const n = new Date(date);
         const other = new Date(otherDate);
-        switch (test){
+        switch (op){
             case "before":
                 return dayjs.utc(n).isBefore(other)
             case "after":
@@ -90,16 +101,6 @@ export module UtcDate {
                 const otherEnd = new Date(otherEndDate ?? other);
                 return dayjs.utc(n).isBetween(other, otherEnd);
         }
-    }
-
-    export function formatTZ(date: DateIn, format: string, locale: "de" | "en-US" = "de", timeZone: TZ = TZ.berlin) {
-        let utc = dayjs.utc(date);
-        let utcToX = timeZone !== TZ.utc ? utc.tz(timeZone) : utc;
-        return utcToX.locale(locale).format(format)
-    }
-
-    export function format(date: DateIn, format: string) {
-        return dayjs.utc(date).format(format)
     }
 
 }

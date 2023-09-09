@@ -1,5 +1,6 @@
 import {DateIn, TZ} from "./date";
 import {UtcDate} from "./UtcDate";
+import {IsoDateTime} from "./IsoDateTime";
 
 
 interface IsoDate extends IsoDateApi {
@@ -45,5 +46,16 @@ export class IsoDateApi {
 
     addQuarter(inc?: number) {
         return new IsoDateApi(UtcDate.addQuarter(this.date, inc))
+    }
+
+    is(a: IsoDate, op: UtcDate.UtcCompareOperation, b: IsoDate, c?: IsoDate) {
+        switch (op){
+            case "between":
+                return UtcDate.is(a.date, op, b.date, c?.date ?? b.date);
+            case "before":
+            case "after":
+            case "sameOrAfter":
+                return UtcDate.is(a.date, op, b.date);
+        }
     }
 }

@@ -3,12 +3,16 @@ import {UtcDate} from "./UtcDate";
 import {IsoDateApi} from "./IsoDate";
 
 
-interface IsoDateTime extends IsoDateTimeApi {}
+interface IsoDateTime extends IsoDateTimeApi {
+}
+
 export module IsoDateTime {
     export function of(date: DateIn) {
         return new IsoDateTimeApi(new Date(date));
     }
-
+    export function clone(isoDateTime: IsoDateTime) {
+        return isoDateTime.clone(isoDateTime);
+    }
 }
 
 class IsoDateTimeApi {
@@ -17,6 +21,10 @@ class IsoDateTimeApi {
 
     public toString(): string {
         return this.date.toISOString();
+    }
+
+    clone(isoDateTime: IsoDateTime) {
+        return IsoDateTime.of(isoDateTime.date);
     }
 
     format(fmt: string) {
@@ -60,6 +68,17 @@ class IsoDateTimeApi {
     }
 
     addQuarter(inc?: number) {
-        return new IsoDateTimeApi(UtcDate.addQuarter(this.date, inc ))
+        return new IsoDateTimeApi(UtcDate.addQuarter(this.date, inc))
+    }
+
+    is(op: UtcDate.UtcCompareOperation, b: IsoDateTime, c?: IsoDateTime) {
+        switch (op){
+            case "between":
+                return UtcDate.is(this.date, op, b.date, c?.date ?? b.date);
+            case "before":
+            case "after":
+            case "sameOrAfter":
+                return UtcDate.is(this.date, op, b.date);
+        }
     }
 }
