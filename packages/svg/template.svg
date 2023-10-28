@@ -6,22 +6,7 @@
             <path style="fill: rgb(67, 65, 65); stroke: rgb(127, 125, 125);" d="M 99.822 0.354 L 0 80.007"/>
         </pattern>
     </defs>
-    <g transform="matrix(1,0,0,1,250,128.0785)" id="poi-1">
-        <title>poi-1</title>
-        <text style="fill: rgb(51, 51, 51); font-family: Arial, sans-serif; font-weight: 700; white-space: pre; font-size: 15px;"
-              id="poi-label" x="5" y="15"><title>poi-label</title>Darlehen 1
-        </text>
-        <text style="fill: rgb(51, 51, 51); font-family: Arial, sans-serif; font-size: 13px; white-space: pre;"
-              x="5" y="40">Ende der Sollzinsbindung
-        </text>
-        <text style="fill: rgb(51, 51, 51); font-family: Arial; font-size: 13px;" x="5" y="60">10.10.2024,
-            200.000,00 €
-        </text>
-        <path style="fill: rgb(216, 216, 216); stroke: rgb(0, 0, 0); stroke-dasharray: 4;"
-              d="M 0 250 L 0 0">
-            <title>poi-mark</title>
-        </path>
-    </g>
+    <rect x="0" y="0" width="500" height="300" fill="white"> </rect>
     <g id="axis" style="">
         <title>axis</title>
         <path style="fill: rgb(216, 216, 216); stroke: rgb(0, 0, 0);" d="M 0 6.221 L 0.308 256.465" id="y-axis">
@@ -43,5 +28,21 @@
               id="tilgung">
             <title>tilgung</title>
         </path>
+    </g>
+    <g transform="matrix(1,0,0,1,228,85)" id="poi-1">
+        <title>poi-1</title>
+        <text style="fill: rgb(51, 51, 51); font-family: Arial, sans-serif; font-weight: 700; white-space: pre; font-size: 15px;"
+              id="poi-label" x="5" y="15"><title>poi-label</title>Name of Series
+        </text>
+        <text style="fill: rgb(51, 51, 51); font-family: Arial, sans-serif; font-size: 13px; white-space: pre;" x="5"
+              y="40">Detail Information
+        </text>
+        <text style="fill: rgb(51, 51, 51); font-family: Arial; font-size: 13px;" x="5" y="60">value of x-axis,
+            value of y-axis
+        </text>
+        <path style="fill: rgb(216, 216, 216); stroke: rgb(0, 0, 0); stroke-dasharray: 4;" d="M 0 80 L 0 0">
+            <title>poi-mark</title>
+        </path>
+        <circle id="poi-marker" r="5" cx="0" cy="80" stroke="black" fill="darkgray"/>
     </g>
 </svg>

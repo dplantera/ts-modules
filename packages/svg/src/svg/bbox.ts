@@ -1,6 +1,7 @@
 import svgPathBbox from "svg-path-bbox";
 import {INode} from "svgson";
 import {bboxPath, parsePath} from "./parser";
+import * as _ from "lodash";
 
 export interface Dimension {
     width: number;
@@ -8,9 +9,12 @@ export interface Dimension {
 }
 
 export function dim(bbox: ReturnType<typeof getBoundingBox>): Dimension{
+    if(_.isNil(bbox)){
+        throw new Error("no bounding box provided")
+    }
     return {
-        width: bbox.x2 - bbox.x1,
-        height: bbox.y2 - bbox.y1,
+        width: bbox.x2 -( bbox?.x1 ?? 0),
+        height: bbox.y2 - (bbox?.y1 ?? 0),
     }
 }
 
@@ -41,14 +45,24 @@ export function getBoundingBox(shape: INode) {
         case 'text': {
             const x = parseFloat(shape.attributes['x']);
             const y = parseFloat(shape.attributes['y']);
-            return {x1: 0, y1: 0, x2: x, y2: y};
+            return {x1: undefined, y1: undefined, x2: x, y2: y};
+        }
+        case 'title': {
+            return undefined;
         }
         case 'g': {
             const collectiveBox = {x1: Infinity, y1: Infinity, x2: -Infinity, y2: -Infinity};
             shape.children.forEach(c => {
                 const shapeBoundingBox = getBoundingBox(c);
-                collectiveBox.x1 = Math.min(collectiveBox.x1, shapeBoundingBox.x1);
-                collectiveBox.y1 = Math.min(collectiveBox.y1, shapeBoundingBox.y1);
+                if(_.isNil(shapeBoundingBox)){
+                    return;
+                }
+                if(!_.isNil(shapeBoundingBox.x1)) {
+                    collectiveBox.x1 = Math.min(collectiveBox.x1, shapeBoundingBox.x1);
+                }
+                if(!_.isNil(shapeBoundingBox.y1)) {
+                    collectiveBox.y1 = Math.min(collectiveBox.y1, shapeBoundingBox.y1);
+                }
                 collectiveBox.x2 = Math.max(collectiveBox.x2, shapeBoundingBox.x2);
                 collectiveBox.y2 = Math.max(collectiveBox.y2, shapeBoundingBox.y2);
             })

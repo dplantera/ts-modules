@@ -1,5 +1,5 @@
 import fs from "fs";
-import {INode, parse, stringify} from "svgson"
+import {INode, parse, parseSync, stringify} from "svgson"
 import * as _ from "lodash";
 import {dim, Dimension, getBoundingBox} from "./svg/bbox";
 import {parseMatrixParams, parsePos} from "./svg/parser";
@@ -14,7 +14,6 @@ export module Svg {
     }
 
     export function create(svg: INode) {
-        let _dim: Dimension | undefined = undefined;
         return {
             get() {
                 return _.cloneDeep(svg)
@@ -29,11 +28,7 @@ export module Svg {
                 return getBoundingBox(svg);
             },
             dimensions(): Dimension {
-                if (_.isNil(_dim)) {
-                    _dim = dim(this.bbox())
-                    // _dim = elLength(svg)
-                }
-                return _dim;
+                return dim(this.bbox());
             },
             mutMove(pos: Vec2) {
                 move(svg, pos )
@@ -58,6 +53,9 @@ export module Svg {
     export async function fromStr(svgStr: string) {
         return of((await parse(svgStr)))
     }
+    export  function fromStrSync(svgStr: string) {
+        return of(( parseSync(svgStr)))
+    }
 
     export function selectById(node: INode, id: string): INode {
         const n = selectByIdRec(node, id)
@@ -79,9 +77,6 @@ export module Svg {
         }
         return undefined;
     }
-
-
-
 }
 
 
