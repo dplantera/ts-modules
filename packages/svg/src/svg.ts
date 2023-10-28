@@ -10,9 +10,7 @@ export module Svg {
     export function of(svg: INode): Svg {
         return create(svg)
     }
-    export function save(svg:Svg) {
 
-    }
     export function create(svg: INode) {
         let _dim: Vec2 | undefined = undefined;
         return {

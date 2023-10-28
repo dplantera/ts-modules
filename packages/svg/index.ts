@@ -1,22 +1,20 @@
 #!/usr/bin/env -S node -r "ts-node/register"
 
-import {INode, parse, stringify} from "svgson"
-import * as fs from "fs";
-import {Svg} from "./src/svg";
 import {SvgChart} from "./src/svgChart";
-
-function scaleChart(pos: number, posMax: number, posMin: number, chartPosMax: number) {
-    return ((pos) / (posMax)) * chartPosMax
-}
 
 
 async function main() {
-    const data = [{x: 0, y: 10}, {x: 5, y: 5}];
-    const chart = await SvgChart.fromFile("template.svg", {axis: {id: {y: "y-axis", x : "x-axis"}}});
-    chart.updateFilledLine("tilgung", data);
-
-    const poi1 = chart.mutSvg().mutSelectById( "poi-1")
-    poi1.mutMove({x: 0, y: 0})
+    const seriesA = [{x: 0, y: 10}, {x: 5, y: 5}];
+    const seriesB = [{x: 5.1, y: 4.9}, {x: 10, y: 0}];
+    const chart = await SvgChart.fromFile("template.svg", {
+        axis: {id: {y: "y-axis", x: "x-axis"}},
+        graphs: {filledLines: [{data: seriesA, id: "tilgung"}, {data: seriesB, id: 'anfi'}]},
+        pointsOfInterest: ["poi-1"]
+    });
+    // chart.updatePosFilledLine("tilgung", seriesA);
+    // chart.updatePosFilledLine("anfi", seriesB);
+    chart.updateFilledLineGraphs();
+    chart.updatePosElement("poi-1", {x: 2, y: 10.2})
 
     await chart.save("out.svg");
 }

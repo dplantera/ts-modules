@@ -1,4 +1,7 @@
 node_modules/
+lerna-debug.log
+npm-debug.log
+packages/*/lib
 .idea
-.turbo
 dist
+turbo-build.log
