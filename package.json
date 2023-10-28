@@ -18,7 +18,8 @@
     "turbo": "^1.10.13",
     "typescript": "^5.2.2",
     "zod": "^3.19.1",
-    "lodash": "^4.17.21"
+    "lodash": "^4.17.21",
+    "ts-node": "^10.9.1"
   },
   "peerDependencies": {
     "pnpm": ">=7.18.1"
