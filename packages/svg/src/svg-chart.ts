@@ -114,6 +114,9 @@ export module SvgChart {
 
                 poi1.mutMove(newPoint)
             },
+            toString() {
+              return this.mutSvg().toString()
+            },
             update() {
                 opts.graphs.filledLines.forEach(({data, id}) => this.updatePosFilledLine(id, data));
                 opts.pointsOfInterest?.forEach(({id, data}) => this.updatePoi(id, data))
