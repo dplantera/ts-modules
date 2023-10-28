@@ -8,7 +8,7 @@ export interface ChartOptions {
         offset: number | { x: number, y: number }
     },
     graphs: { filledLines: Array<{ data: Array<Vec2>, id: string }> },
-    pointsOfInterest?: {}
+    pointsOfInterest?: Array<{ data: Vec2, id: string }>
 }
 
 export module SvgChart {
@@ -20,18 +20,20 @@ export module SvgChart {
         const yAxis = svg.mutSelectById(opts.axis.id.y);
         const xAxis = svg.mutSelectById(opts.axis.id.x);
         const translatePoint = {
-            "default": (a: Vec2) => a
+            "default": (a: Vec2) => ({...a, xWithOffset: a.x, yWithOffset: a.y}),
+            absolute: (a: Vec2) => ({...a, xWithOffset: a.x, yWithOffset: a.y}),
         };
         // we need a bucket with all points - so we can scale with alignment
         const graphs = {
-            filledLines: opts.graphs.filledLines.flatMap(v => v.data.flatMap(d => ({...d, ref: v.id})))
+            filledLines: opts.graphs.filledLines.flatMap(v => v.data.flatMap(d => ({...d, ref: v.id}))),
+            points: opts.pointsOfInterest ?? []
         };
-        return {
+        const api = {
             height() {
-                return yAxis.length().y
+                return yAxis.dimensions().height
             },
             width() {
-                return xAxis.length().x
+                return xAxis.dimensions().width
             },
             mutSvg() {
                 return svg
@@ -39,8 +41,8 @@ export module SvgChart {
             save(filePath: string) {
                 return svg.save(filePath);
             },
-            axisOffset(axis: 'x' | 'y'){
-                if( typeof opts.axis.offset === "number"){
+            axisOffset(axis: 'x' | 'y') {
+                if (typeof opts.axis.offset === "number") {
                     return 1 + opts.axis.offset;
                 }
                 return 1 + opts.axis.offset[axis]
@@ -51,19 +53,32 @@ export module SvgChart {
                 const yData = graphs.filledLines.map(d => d.y)
                 return {
                     xDataMin: Math.min(...xData),
-                    xDataMax: Math.max(...xData) * this.axisOffset('x'),
+                    xDataMax: Math.max(...xData),
                     yDataMin: Math.min(...yData),
-                    yDataMax: Math.max(...yData) * this.axisOffset('y'),
+                    yDataMax: Math.max(...yData),
                 }
             },
-            translate(data: Array<Vec2>) {
-                const {xDataMin, yDataMin, yDataMax, xDataMax} = this.extremePoints();
+            withOffset(dim: ReturnType<typeof this.extremePoints>) {
+                return {
+                    ...dim,
+                    xDataMax: dim.xDataMax * this.axisOffset('x'),
+                    yDataMax: dim.yDataMax * this.axisOffset('y'),
+                }
+            },
+            // todo: refactor - just added quickly support for diffrent minimum and maximum (scaled with and without offset)
+            init() {
+                const extrema = this.extremePoints();
+                const extremaWithOffset = this.withOffset(extrema);
                 const flipY = (p: number) => this.height() - p;
                 // we may change it when we need multiple translation e.g. multiple y-axis
                 translatePoint.default = (vec: Vec2) => ({
-                    x: scaleChart(vec.x, xDataMax, xDataMin, this.width()),
-                    y: flipY(scaleChart(vec.y, yDataMax, yDataMin, this.height()))
+                    x: scaleChart(vec.x, extrema.xDataMax, extrema.xDataMin, this.width()),
+                    y: flipY(scaleChart(vec.y, extrema.yDataMax, extrema.yDataMin, this.height())),
+                    xWithOffset: scaleChart(vec.x, extremaWithOffset.xDataMax, extremaWithOffset.xDataMin, this.width()),
+                    yWithOffset: flipY(scaleChart(vec.y, extremaWithOffset.yDataMax, extremaWithOffset.yDataMin, this.height()))
                 })
+            },
+            translate(data: Array<Vec2>) {
                 return data.map(translatePoint.default)
             },
             translatePoint(vec: Vec2) {
@@ -76,23 +91,42 @@ export module SvgChart {
               x2           x4
              */
             updatePosFilledLine(id: string, data: Array<Vec2>) {
-                const pts = this.translate(data);
-                const first = pts[0];
-                const last = pts.slice(-1)[0];
+                const withOffsets = this.translate(data).map(d => ({x: d.xWithOffset, y: d.yWithOffset}));
+                const first = withOffsets[0];
+                const last = withOffsets.slice(-1)[0];
 
-                svg.mutSelectById(id).mutGet().attributes.d = `M ${pts[0].x} ${pts[0].y} ${pts.slice(1).map(s => (`L ${s.x} ${s.y}`))} L ${last.x} ${this.height()} L ${first.x} ${this.height()} Z`
+                svg.mutSelectById(id).mutGet().attributes.d = `M ${withOffsets[0].x} ${withOffsets[0].y} ${withOffsets.slice(1).map(s => (`L ${s.x} ${s.y}`))} L ${last.x} ${this.height()} L ${first.x} ${this.height()} Z`
             },
-            updatePosElement(id: string, pos: Vec2) {
-                const poi1 = svg.mutSelectById(id)
-                poi1.mutMove(this.translatePoint(pos))
+            updatePoi(id: string, pos: Vec2) {
+                const poi1 = svg.mutSelectById(id);
+                const extrema = this.extremePoints();
+                const poiPos = findPointAboveLine(pos.x, {x: extrema.xDataMin, y: extrema.yDataMin}, {
+                    x: extrema.xDataMax,
+                    y: extrema.yDataMax + 2
+                })
+                console.log(poiPos, pos)
+                const translated = this.translatePoint(poiPos);
+                poi1.mutMove({x: translated.xWithOffset, y: translated.y})
             },
-            updateFilledLineGraphs() {
-                opts.graphs.filledLines.forEach(({data, id}) => this.updatePosFilledLine(id, data))
+            update() {
+                opts.graphs.filledLines.forEach(({data, id}) => this.updatePosFilledLine(id, data));
+                opts.pointsOfInterest?.forEach(({id, data}) => this.updatePoi(id, data))
             },
         }
+        api.init();
+        return api
     }
 }
 
 function scaleChart(pos: number, posMax: number, posMin: number, chartPosMax: number) {
     return ((pos) / (posMax)) * chartPosMax
 }
+
+
+export function findPointAboveLine(givenX: number, p1: Vec2, p2: Vec2) {
+    const slope = (p2.y - p1.y) / (p2.x - p1.x);
+    const y_intercept = p1.x - slope * p1.x;
+    const y = slope * givenX + y_intercept; // Equation of the line
+    return {x: givenX, y};
+}
+
