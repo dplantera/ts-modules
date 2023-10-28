@@ -1,7 +1,12 @@
 import {Svg, Vec2} from "./svg";
 
 export interface ChartOptions {
-    axis: { id: { x: string, y: string } },
+    axis: {
+        /** set the ids from the svg representing the axis */
+        id: { x: string, y: string },
+        /** set the offset of the axis in percent so the graph will still have space on its edges  */
+        offset: number | { x: number, y: number }
+    },
     graphs: { filledLines: Array<{ data: Array<Vec2>, id: string }> },
     pointsOfInterest?: {}
 }
@@ -34,18 +39,23 @@ export module SvgChart {
             save(filePath: string) {
                 return svg.save(filePath);
             },
+            axisOffset(axis: 'x' | 'y'){
+                if( typeof opts.axis.offset === "number"){
+                    return 1 + opts.axis.offset;
+                }
+                return 1 + opts.axis.offset[axis]
+            },
             extremePoints() {
                 // fixme: maybe optimize
                 const xData = graphs.filledLines.map(d => d.x)
                 const yData = graphs.filledLines.map(d => d.y)
                 return {
                     xDataMin: Math.min(...xData),
-                    xDataMax: Math.max(...xData),
+                    xDataMax: Math.max(...xData) * this.axisOffset('x'),
                     yDataMin: Math.min(...yData),
-                    yDataMax: Math.max(...yData),
+                    yDataMax: Math.max(...yData) * this.axisOffset('y'),
                 }
             },
-
             translate(data: Array<Vec2>) {
                 const {xDataMin, yDataMin, yDataMax, xDataMax} = this.extremePoints();
                 const flipY = (p: number) => this.height() - p;
