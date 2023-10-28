@@ -83,6 +83,9 @@ importers:
       lodash:
         specifier: ^4.17.21
         version: 4.17.21
+      svg-path-bbox:
+        specifier: ^1.2.4
+        version: 1.2.4
       svgson:
         specifier: ^5.3.1
         version: 5.3.1
@@ -2634,6 +2637,18 @@ packages:
     resolution: {integrity: sha512-ot0WnXS9fgdkgIcePe6RHNk1WA8+muPa6cSjeR3V8K27q9BB1rTE3R1p7Hv0z1ZyAc8s6Vvv8DIyWf681MAt0w==}
     engines: {node: '>= 0.4'}
     dev: true
+
+  /svg-path-bbox@1.2.4:
+    resolution: {integrity: sha512-RkYmPtOY1wdTbtpyfn7n3Dwxw9vFYIFT8/FugjUU/127UDdV5rWfBDhkoQZVlZa1xK3bV4Nuv8wdZ0k7Vt4pnQ==}
+    engines: {node: '>=6.17.1'}
+    hasBin: true
+    dependencies:
+      svgpath: 2.6.0
+    dev: false
+
+  /svgpath@2.6.0:
+    resolution: {integrity: sha512-OIWR6bKzXvdXYyO4DK/UWa1VA1JeKq8E+0ug2DG98Y/vOmMpfZNj+TIG988HjfYSqtcy/hFOtZq/n/j5GSESNg==}
+    dev: false
 
   /svgson@5.3.1:
     resolution: {integrity: sha512-qdPgvUNWb40gWktBJnbJRelWcPzkLed/ShhnRsjbayXz8OtdPOzbil9jtiZdrYvSDumAz/VNQr6JaNfPx/gvPA==}

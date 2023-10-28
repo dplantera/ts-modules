@@ -1,6 +1,8 @@
 import fs from "fs";
 import {INode, parse, stringify} from "svgson"
 import * as _ from "lodash";
+import {dim, Dimension, getBoundingBox} from "./svg/bbox";
+import {parseMatrixParams, parsePos} from "./svg/parser";
 
 export interface Svg extends ReturnType<typeof Svg.create> {
 }
@@ -12,10 +14,10 @@ export module Svg {
     }
 
     export function create(svg: INode) {
-        let _dim: Vec2 | undefined = undefined;
+        let _dim: Dimension | undefined = undefined;
         return {
             get() {
-                return structuredClone(svg)
+                return _.cloneDeep(svg)
             },
             mutGet() {
                 return svg
@@ -23,9 +25,13 @@ export module Svg {
             mutSelectById(id: string) {
                 return of(selectById(svg, id))
             },
-            length(): Vec2 {
+            bbox(){
+                return getBoundingBox(svg);
+            },
+            dimensions(): Dimension {
                 if (_.isNil(_dim)) {
-                    _dim = length(svg)
+                    _dim = dim(this.bbox())
+                    // _dim = elLength(svg)
                 }
                 return _dim;
             },
@@ -75,23 +81,7 @@ export module Svg {
     }
 
 
-     function length(node: INode) {
-        if (node.name === 'path') {
-            // M 0 6.221 L 0.308 256.465
-            const path = parsePath(node);
-            const xOrdinates = path.map(p => p.x);
-            const yOrdinates = path.map(p => p.y);
-            const minX = Math.min(...xOrdinates);
-            const maxX = Math.max(...xOrdinates);
-            const minY = Math.min(...yOrdinates);
-            const maxY = Math.max(...yOrdinates);
-            return {
-                x: maxX - minX,
-                y: maxY - minY
-            }
-        }
-        throw new Error(`dimension yet not supported for ${JSON.stringify(node)}`)
-    }
+
 }
 
 
@@ -100,6 +90,10 @@ export interface Vec2 {
     y: number
 }
 
+function move(node: INode, pos: Vec2) {
+    const n = positionalNode(node);
+    n.move(pos);
+}
 
 function positionalNode(node: INode) {
     const nodePos = parsePos(node);
@@ -109,27 +103,6 @@ function positionalNode(node: INode) {
             console.log(`moving to ${JSON.stringify(pos)} ${JSON.stringify(nodePos)}`)
         }
     }
-}
-
-function move(node: INode, pos: Vec2) {
-    const n = positionalNode(node);
-    n.move(pos);
-}
-
-
-function parsePos(node: INode): Vec2 {
-    if (node.attributes.x && node.attributes.y) {
-        return {
-            x: Number.parseFloat(node.attributes.x),
-            y: Number.parseFloat(node.attributes.y),
-        };
-    }
-    if (node.attributes.transform) {
-        if (node.attributes.transform.startsWith("matrix(")) {
-            return parsePosFromMatrix(node)
-        }
-    }
-    throw new Error(`could not parse 'pos' for node ${JSON.stringify(node)}`)
 }
 
 function setPos(node: INode, pos: Vec2) {
@@ -150,32 +123,3 @@ function setPos(node: INode, pos: Vec2) {
     throw new Error(`could not parse 'pos' for node ${JSON.stringify(node)}`)
 }
 
-function parsePath(node: INode) {
-    const values = parseFloats(node.attributes.d) ?? [];
-    const chunks = []
-    if (values.length < 2) {
-        throw new Error(`expected at least one coordinate in path ${JSON.stringify(node)}`)
-    }
-    for (let i = 0; i < values.length - 1; i++) {
-        chunks.push({x: values[i], y: values[i + 1]})
-    }
-    return chunks;
-}
-
-function parseFloats(text: string) {
-    const reg = new RegExp("[0-9]{1,}\\.?[0-9]*", "gm")
-    return text.match(reg)?.map(m => Number.parseFloat(m));
-}
-
-function parseMatrixParams(node: INode): number[] {
-    const matrixParams = parseFloats(node.attributes.transform);
-    if ((matrixParams?.length) !== 6) {
-        throw new Error(`expected matrixParams to be of length 6 ${matrixParams} ${node.attributes.transform}`)
-    }
-    return matrixParams
-}
-
-function parsePosFromMatrix(node: INode): Vec2 {
-    const matrixParams = parseMatrixParams(node);
-    return {x: matrixParams?.[4], y: matrixParams?.[5]}
-}
