@@ -1,4 +1,4 @@
-import {Svg, Vec2} from "./svg";
+import { Svg, Vec2} from "./svg";
 
 export interface ChartOptions {
     axis: {
@@ -72,10 +72,10 @@ export module SvgChart {
                 const flipY = (p: number) => this.height() - p;
                 // we may change it when we need multiple translation e.g. multiple y-axis
                 translatePoint.default = (vec: Vec2) => ({
-                    x: scaleChart(vec.x, extrema.xDataMax, extrema.xDataMin, this.width()),
-                    y: flipY(scaleChart(vec.y, extrema.yDataMax, extrema.yDataMin, this.height())),
-                    xWithOffset: scaleChart(vec.x, extremaWithOffset.xDataMax, extremaWithOffset.xDataMin, this.width()),
-                    yWithOffset: flipY(scaleChart(vec.y, extremaWithOffset.yDataMax, extremaWithOffset.yDataMin, this.height()))
+                    x: scaleChart(vec.x, extrema.xDataMax, extrema.xDataMin, this.width(), 0),
+                    y: flipY(scaleChart(vec.y, extrema.yDataMax, extrema.yDataMin, this.height(), 0)),
+                    xWithOffset: scaleChart(vec.x, extremaWithOffset.xDataMax, extremaWithOffset.xDataMin, this.width(), 0),
+                    yWithOffset: flipY(scaleChart(vec.y, extremaWithOffset.yDataMax, extremaWithOffset.yDataMin, this.height(), 0))
                 })
             },
             translate(data: Array<Vec2>) {
@@ -100,13 +100,19 @@ export module SvgChart {
             updatePoi(id: string, pos: Vec2) {
                 const poi1 = svg.mutSelectById(id);
                 const extrema = this.extremePoints();
+                console.log("extrema", extrema, pos)
                 const poiPos = findPointAboveLine(pos.x, {x: extrema.xDataMin, y: extrema.yDataMin}, {
                     x: extrema.xDataMax,
-                    y: extrema.yDataMax + 2
+                    y: extrema.yDataMax
                 })
-                console.log(poiPos, pos)
-                const translated = this.translatePoint(poiPos);
-                poi1.mutMove({x: translated.xWithOffset, y: translated.y})
+                const poiPosTranslated = this.translatePoint(poiPos);
+                const dim = poi1.dimensions();
+                // todo: get radius from poi marker
+                const offsetMarkerRadius = 5;
+                const newPoint = {x: poiPosTranslated.xWithOffset, y: poiPosTranslated.yWithOffset - dim.height + offsetMarkerRadius};
+                console.log(poiPos, pos, newPoint)
+
+                poi1.mutMove(newPoint)
             },
             update() {
                 opts.graphs.filledLines.forEach(({data, id}) => this.updatePosFilledLine(id, data));
@@ -118,15 +124,17 @@ export module SvgChart {
     }
 }
 
-function scaleChart(pos: number, posMax: number, posMin: number, chartPosMax: number) {
-    return ((pos) / (posMax)) * chartPosMax
+
+function scaleChart(pos: number, posMax: number, posMin: number, chartPosMax: number, chartPosMin: number) {
+    return (pos - posMin) / (posMax - posMin) * (chartPosMax - chartPosMin) + chartPosMin
 }
 
-
 export function findPointAboveLine(givenX: number, p1: Vec2, p2: Vec2) {
-    const slope = (p2.y - p1.y) / (p2.x - p1.x);
-    const y_intercept = p1.x - slope * p1.x;
-    const y = slope * givenX + y_intercept; // Equation of the line
-    return {x: givenX, y};
+    // const slope = (p2.y - p1.y) / (p2.x - p1.x);
+    const top = p2.y + p1.y
+    const slope = top / (p2.x - p1.x);
+    const y =slope * givenX ; // Equation of the line
+    const invertedYAxisAware = p2.y - y;
+    return {x: givenX, y: invertedYAxisAware};
 }
 

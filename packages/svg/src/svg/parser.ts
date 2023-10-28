@@ -1,6 +1,5 @@
 import {Vec2} from "../svg";
 import {INode} from "svgson";
-import {Dimension} from "./bbox";
 
 export function parsePos(node: INode): Vec2 {
     if (node.attributes.x && node.attributes.y) {
