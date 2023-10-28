@@ -20,7 +20,8 @@
     "lodash": "^4.17.21",
     "cross-env": "^7.0.3",
     "run-parallel": "^1.2.0",
-    "run-series": "^1.1.9"
+    "run-series": "^1.1.9",
+    "ts-node": "^10.9.1"
   },
   "packageManager": "pnpm@8.7.4"
 }

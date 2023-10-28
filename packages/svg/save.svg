@@ -1,0 +1,41 @@
+<svg viewBox="0 0 600 400" xmlns="http://www.w3.org/2000/svg" xmlns:bx="https://boxy-svg.com">
+    <defs>
+        <bx:grid x="-67.136" y="-58.479" width="65.602" height="56.861"></bx:grid>
+        <pattern id="pattern-1" viewBox="0 0 100 100" patternUnits="userSpaceOnUse" preserveAspectRatio="none" width="100" height="100" bx:pinned="true">
+            <path style="fill: rgb(67, 65, 65); stroke: rgb(127, 125, 125);" d="M 99.822 0.354 L 0 80.007"></path>
+        </pattern>
+    </defs>
+    <rect x="0.63" y="-1.821" width="598.15" height="400.329" style="fill: rgb(216, 216, 216); stroke: rgb(0, 0, 0);" id="background">
+        <title>background</title>
+    </rect>
+    <g id="poi">
+        <title>poi</title>
+        <g id="poi-details">
+            <title>poi-details</title>
+            <text style="fill: rgb(51, 51, 51); font-family: Arial, sans-serif; font-size: 22.5665px; white-space: pre;" transform="matrix(0.531758, 0, 0, 0.531762, 302.488124, 185.884687)">Ende der Sollzinsbindung</text>
+            <text style="fill: rgb(51, 51, 51); font-family: Arial, sans-serif; font-size: 22.5665px; white-space: pre;" transform="matrix(0.531758, 0, 0, 0.531762, 302.488155, 203.119931)">10.10.2024, 200.000,00 €</text>
+        </g>
+        <text style="fill: rgb(51, 51, 51); font-family: Arial, sans-serif; font-size: 28.2081px; font-weight: 700; white-space: pre;" transform="matrix(0.531758, 0, 0, 0.531762, 298.605678, 165.581068)" id="poi-label"><title>poi-label</title>Darlehen 1</text>
+        <path style="fill: rgb(216, 216, 216); stroke: rgb(0, 0, 0); stroke-dasharray: 4;" d="M 293.772 346.696 L 294.255 147.043">
+            <title>poi-mark</title>
+        </path>
+    </g>
+    <g id="axis" transform="matrix(1, 0, 0, 1, -4, 1)">
+        <title>axis</title>
+        <path style="fill: rgb(216, 216, 216); stroke: rgb(0, 0, 0);" d="M 67.195 0.054 L 67.503 340.644" id="y-axis">
+            <title>y-axis</title>
+        </path>
+        <path style="fill: rgb(216, 216, 216); stroke: rgb(0, 0, 0);" d="M 593.154 339.443 L 67.503 340.644" id="x-axis">
+            <title>x-axis</title>
+        </path>
+    </g>
+    <g id="g-1">
+        <title>g-1</title>
+        <path d="M 64.068 150.847 L 526.717 339.548 L 64.068 339.548 L 64.068 150.847 Z" style="fill: rgb(132, 156, 137); stroke: rgb(255, 255, 255);" bx:shape="triangle 64.068 150.847 462.649 188.701 0 0 1@845a0ed5">
+            <title>tilgung</title>
+        </path>
+        <path d="M 293.751 245.552 L 523.282 339.548 L 293.751 339.548 L 293.751 245.552 Z" style="fill-rule: nonzero; paint-order: stroke markers; fill: rgb(111, 111, 111); stroke: rgb(255, 255, 255);" bx:shape="triangle 293.751 245.552 229.531 93.996 0 0 1@02b82c5d">
+            <title>anfi</title>
+        </path>
+    </g>
+</svg>
