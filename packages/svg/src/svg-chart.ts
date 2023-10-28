@@ -20,8 +20,7 @@ export module SvgChart {
         const yAxis = svg.mutSelectById(opts.axis.id.y);
         const xAxis = svg.mutSelectById(opts.axis.id.x);
         const translatePoint = {
-            "default": (a: Vec2) => ({...a, xWithOffset: a.x, yWithOffset: a.y}),
-            absolute: (a: Vec2) => ({...a, xWithOffset: a.x, yWithOffset: a.y}),
+            "default": (a: Vec2) => ({ x: a.x, y: a.y}),
         };
         // we need a bucket with all points - so we can scale with alignment
         const graphs = {
@@ -72,10 +71,8 @@ export module SvgChart {
                 const flipY = (p: number) => this.height() - p;
                 // we may change it when we need multiple translation e.g. multiple y-axis
                 translatePoint.default = (vec: Vec2) => ({
-                    x: scaleChart(vec.x, extrema.xDataMax, extrema.xDataMin, this.width(), 0),
-                    y: flipY(scaleChart(vec.y, extrema.yDataMax, extrema.yDataMin, this.height(), 0)),
-                    xWithOffset: scaleChart(vec.x, extremaWithOffset.xDataMax, extremaWithOffset.xDataMin, this.width(), 0),
-                    yWithOffset: flipY(scaleChart(vec.y, extremaWithOffset.yDataMax, extremaWithOffset.yDataMin, this.height(), 0))
+                    x: scaleChart(vec.x, extremaWithOffset.xDataMax, extremaWithOffset.xDataMin, this.width(), 0),
+                    y: flipY(scaleChart(vec.y, extremaWithOffset.yDataMax, extremaWithOffset.yDataMin, this.height(), 0))
                 })
             },
             translate(data: Array<Vec2>) {
@@ -84,33 +81,22 @@ export module SvgChart {
             translatePoint(vec: Vec2) {
                 return translatePoint.default(vec)
             },
-            /*
-              x1
-                           x3
-
-              x2           x4
-             */
             updatePosFilledLine(id: string, data: Array<Vec2>) {
-                const withOffsets = this.translate(data).map(d => ({x: d.xWithOffset, y: d.yWithOffset}));
-                const first = withOffsets[0];
-                const last = withOffsets.slice(-1)[0];
-
-                svg.mutSelectById(id).mutGet().attributes.d = `M ${withOffsets[0].x} ${withOffsets[0].y} ${withOffsets.slice(1).map(s => (`L ${s.x} ${s.y}`))} L ${last.x} ${this.height()} L ${first.x} ${this.height()} Z`
+                svg.mutSelectById(id).toFilledLine(this.translate(data), {fillUpHeight: this.height()})
             },
             updatePoi(id: string, pos: Vec2) {
                 const poi1 = svg.mutSelectById(id);
                 const extrema = this.extremePoints();
-                console.log("extrema", extrema, pos)
                 const poiPos = findPointAboveLine(pos.x, {x: extrema.xDataMin, y: extrema.yDataMin}, {
                     x: extrema.xDataMax,
                     y: extrema.yDataMax
                 })
+
                 const poiPosTranslated = this.translatePoint(poiPos);
                 const dim = poi1.dimensions();
                 // todo: get radius from poi marker
                 const offsetMarkerRadius = 5;
-                const newPoint = {x: poiPosTranslated.xWithOffset, y: poiPosTranslated.yWithOffset - dim.height + offsetMarkerRadius};
-                console.log(poiPos, pos, newPoint)
+                const newPoint = {x: poiPosTranslated.x, y: poiPosTranslated.y - dim.height + offsetMarkerRadius};
 
                 poi1.mutMove(newPoint)
             },

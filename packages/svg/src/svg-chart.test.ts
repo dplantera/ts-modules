@@ -13,7 +13,7 @@ describe("SvgChart", () => {
             pointsOfInterest: [{data: {x: 7.5, y: 2.5}, id: "poi-1"}]
         });
         chart.update();
-        // await chart.save("out.svg")
+        await chart.save("out.svg")
         const expected = fs.readFileSync(path.resolve(process.cwd(), "test/fixtures/simple.svg"), "utf-8")
          equalWithoutNewLines(chart.toString(), expected)
     })
