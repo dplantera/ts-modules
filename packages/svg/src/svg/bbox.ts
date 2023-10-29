@@ -1,19 +1,20 @@
-import svgPathBbox from "svg-path-bbox";
 import {INode} from "svgson";
-import {bboxPath, parsePath} from "./parser";
+import {bboxPath, parseStyle, parseUnit} from "./parser";
 import * as _ from "lodash";
+import {Svg} from "../svg";
+import {stringWidth} from "./string-width";
 
 export interface Dimension {
     width: number;
     height: number;
 }
 
-export function dim(bbox: ReturnType<typeof getBoundingBox>): Dimension{
-    if(_.isNil(bbox)){
+export function dim(bbox: ReturnType<typeof getBoundingBox>): Dimension {
+    if (_.isNil(bbox)) {
         throw new Error("no bounding box provided")
     }
     return {
-        width: bbox.x2 -( bbox?.x1 ?? 0),
+        width: bbox.x2 - (bbox?.x1 ?? 0),
         height: bbox.y2 - (bbox?.y1 ?? 0),
     }
 }
@@ -45,7 +46,16 @@ export function getBoundingBox(shape: INode) {
         case 'text': {
             const x = parseFloat(shape.attributes['x']);
             const y = parseFloat(shape.attributes['y']);
-            return {x1: undefined, y1: undefined, x2: x, y2: y};
+            const style = parseStyle(shape.attributes['style'])
+            const font = style['font-size'];
+            const fontSize = parseUnit(font)
+            const child = Svg.selectBy(shape, {
+                where: (n) => n.type === "text" && n.value !== "",
+                skip: (n) => n.type !== "text" && n.name !== "text"
+            });
+            const text = child?.value ?? shape.value;
+
+            return {x1: x, y1: y, x2: stringWidth(text, fontSize.value) , y2: fontSize.value};
         }
         case 'title': {
             return undefined;
@@ -54,13 +64,13 @@ export function getBoundingBox(shape: INode) {
             const collectiveBox = {x1: Infinity, y1: Infinity, x2: -Infinity, y2: -Infinity};
             shape.children.forEach(c => {
                 const shapeBoundingBox = getBoundingBox(c);
-                if(_.isNil(shapeBoundingBox)){
+                if (_.isNil(shapeBoundingBox)) {
                     return;
                 }
-                if(!_.isNil(shapeBoundingBox.x1)) {
+                if (!_.isNil(shapeBoundingBox.x1)) {
                     collectiveBox.x1 = Math.min(collectiveBox.x1, shapeBoundingBox.x1);
                 }
-                if(!_.isNil(shapeBoundingBox.y1)) {
+                if (!_.isNil(shapeBoundingBox.y1)) {
                     collectiveBox.y1 = Math.min(collectiveBox.y1, shapeBoundingBox.y1);
                 }
                 collectiveBox.x2 = Math.max(collectiveBox.x2, shapeBoundingBox.x2);

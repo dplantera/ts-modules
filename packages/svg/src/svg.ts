@@ -2,7 +2,7 @@ import fs from "fs";
 import {INode, parse, parseSync, stringify} from "svgson"
 import * as _ from "lodash";
 import {dim, Dimension, getBoundingBox} from "./svg/bbox";
-import {parseMatrixParams, parsePos} from "./svg/parser";
+import {parseMatrixParams, parsePos, parseScale, parseTransform, TransformObj} from "./svg/parser";
 
 export interface Svg extends ReturnType<typeof Svg.create> {
 }
@@ -79,6 +79,27 @@ export module Svg {
             mutGet() {
                 return svg
             },
+            transform(transform?:TransformObj){
+                const parsed = parseTransform(svg);
+                if(_.isNil(transform)){
+                    return parsed;
+                }
+                const merged = _.merge(parsed, transform);
+                svg.attributes.transform = Object.entries(merged).map(([k, v]) => `${k}(${v})`).join(" ")
+                return parseTransform(svg);
+            },
+            scale(factor?: number){
+                  if(_.isNil(factor)){
+                      return parseScale(svg)
+                  }
+                 this.transform({scale: `${factor}`});
+                 const n = positionalNode(this);
+                 const pos = n.getPos();
+                 const correction = (1 - factor) * 10 * 8;
+                 pos.y += correction;
+                 n.setPos(pos);
+                 return factor;
+            },
             mutSelectById(id: string) {
                 return of(selectById(svg, id))
             },
@@ -88,10 +109,12 @@ export module Svg {
             dimensions(): Dimension {
                 return dim(this.bbox());
             },
-            mutMove(pos: Vec2) {
-                move(svg, pos)
+            setPos(pos: Vec2) {
+                const n = positionalNode(this);
+                n.setPos(pos);
                 return svg;
             },
+            /** fill the space below or above a line by creating and connecting a parallel path */
             toFilledLine(path: Array<Vec2>, opts: { fillUpHeight: number }) {
                 const [first, ...rest] = path
                 const svgPath = SvgPath.make()
@@ -125,19 +148,29 @@ export module Svg {
     }
 
     export function selectById(node: INode, id: string): INode {
-        const n = selectByIdRec(node, id)
+        const n = selectByRec(node, {where: (n) => n.attributes.id === id})
         if (!n) {
             throw new Error(`could not finde node with id ${id}`);
         }
         return n;
     }
 
-    function selectByIdRec(node: INode, id: string): INode | undefined {
-        if (node.attributes.id === id) {
+    export function selectByType(node: INode, type: string, op?: {where: (n: INode) => boolean;}): INode | undefined{
+        return selectByRec(node, {where: (n) => n.type === type && (op?.where(n) ?? true)});
+    }
+    export function selectBy(node: INode, op: {where: (n: INode) => boolean; skip?: (n: INode) => boolean}): INode | undefined{
+        return selectByRec(node, op);
+    }
+
+    function selectByRec(node: INode, op: {where: (n: INode) => boolean, skip?: (n: INode) => boolean}): INode | undefined {
+        if(op.skip?.(node) ?? false) {
+            return undefined;
+        }
+        if (op.where(node) ) {
             return node;
         }
         for (const c of node.children) {
-            const found = selectByIdRec(c, id);
+            const found = selectByRec(c,  op);
             if (found) {
                 return found;
             }
@@ -152,33 +185,30 @@ export interface Vec2 {
     y: number
 }
 
-function move(node: INode, pos: Vec2) {
-    const n = positionalNode(node);
-    n.move(pos);
-}
-
-function positionalNode(node: INode) {
-    const nodePos = parsePos(node);
+function positionalNode(node: Svg) {
+    const nodePos = parsePos(node.mutGet());
     return {
-        move(pos: Vec2) {
+        getPos(){return nodePos},
+        setPos(pos: Vec2) {
             setPos(node, pos);
-            console.log(`moving to ${JSON.stringify(pos)} ${JSON.stringify(nodePos)}`)
+            console.log(`moving to ${JSON.stringify(pos)} from ${JSON.stringify(nodePos)}`)
         }
     }
 }
 
-function setPos(node: INode, pos: Vec2) {
+function setPos(svg: Svg, pos: Vec2) {
+    const node = svg.mutGet();
     if (node.attributes.x && node.attributes.y) {
         node.attributes.x = `${pos.x}`;
         node.attributes.y = `${pos.y}`;
         return;
     }
     if (node.attributes.transform) {
-        if (node.attributes.transform.startsWith("matrix(")) {
+        if (node.attributes.transform.includes("matrix(")) {
             const matrixParams = parseMatrixParams(node);
             matrixParams[4] = pos.x;
             matrixParams[5] = pos.y;
-            node.attributes.transform = `matrix(${matrixParams.join(",")})`;
+            svg.transform({matrix: matrixParams.join(",") })
             return;
         }
     }

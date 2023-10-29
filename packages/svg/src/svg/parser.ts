@@ -1,5 +1,6 @@
 import {Vec2} from "../svg";
 import {INode} from "svgson";
+import * as _ from "lodash";
 
 export function parsePos(node: INode): Vec2 {
     if (node.attributes.x && node.attributes.y) {
@@ -9,14 +10,66 @@ export function parsePos(node: INode): Vec2 {
         };
     }
     if (node.attributes.transform) {
-        if (node.attributes.transform.startsWith("matrix(")) {
+        if (node.attributes.transform.includes("matrix(")) {
             return parsePosFromMatrix(node)
         }
     }
     throw new Error(`could not parse 'pos' for node ${JSON.stringify(node)}`)
 }
 
-export function bboxPath(node: INode){
+export interface TransformObj extends Record<'matrix' | 'scale' | string, string> {
+
+}
+export function parseTransform(node:INode): TransformObj {
+    // const funcNames = /(?<func>(\w+(?=\()))/g;
+    // const params =/(?<params>[0-9,.]+)/g
+    const com = /(?<func>\w+(?=\((?<params>[0-9,.]+)))/g
+    const transform = node.attributes.transform;
+    const parsedTransform: TransformObj = {};
+    const match3 = transform.matchAll(com)
+    for(const m of match3){
+        const func = m.groups?.["func"];
+        const params = m.groups?.["params"];
+        if(_.isNil(func) || _.isNil(params)){
+           throw new Error(`failed parsing transfrom ${transform}`)
+        }
+        parsedTransform[func] = params
+    }
+    return parsedTransform;
+}
+export function parseScale(node:INode){
+    const transform = parseTransform(node);
+    const params = parseFloats(transform.scale);
+    if(_.isNil(params)){
+        return 1;
+    }
+    if(params.length > 1){
+        return {x: params[0], y: params[1]}
+    }
+    return params[0]
+}
+
+export function parseStyle(style: string): Record<"font-weight" | "font-size" | "font-family" | string, string> {
+    // fill: rgb(51, 51, 51); font-family: Arial, sans-serif; font-weight: 700; white-space: pre; font-size: 15px;
+    return style.split(";").reduce((acc, curr) => {
+        const [key, value] = curr.split(":")
+        if(_.isNil(key) || _.isNil(value) || key === "" || value === ""){
+            return acc;
+        }
+        return {...acc, [key.trim()]: value.trim()}
+    }, {});
+}
+
+export function parseUnit(str: string): { unit: 'px' | string, value: number } {
+    const value = parseFloats(str)?.[0];
+    const unit = str.match(/\w+/)?.[0]
+    if (_.isNil(value) || _.isNil(unit)) {
+        throw new Error(`could not parse unit ${str}`)
+    }
+    return {unit, value}
+}
+
+export function bboxPath(node: INode) {
     if (node.name === 'path') {
         // M 0 6.221 L 0.308 256.465
         const path = parsePath(node);
@@ -53,7 +106,8 @@ function parseFloats(text: string) {
 }
 
 export function parseMatrixParams(node: INode): number[] {
-    const matrixParams = parseFloats(node.attributes.transform);
+    const transform = parseTransform(node);
+    const matrixParams = parseFloats(transform.matrix);
     if ((matrixParams?.length) !== 6) {
         throw new Error(`expected matrixParams to be of length 6 ${matrixParams} ${node.attributes.transform}`)
     }

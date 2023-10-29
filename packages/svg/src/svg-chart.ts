@@ -96,9 +96,16 @@ export module SvgChart {
                 const dim = poi1.dimensions();
                 // todo: get radius from poi marker
                 const offsetMarkerRadius = 5;
-                const newPoint = {x: poiPosTranslated.x, y: poiPosTranslated.y - dim.height + offsetMarkerRadius};
 
-                poi1.mutMove(newPoint)
+                const newPoint = {x: poiPosTranslated.x , y: poiPosTranslated.y  - dim.height + offsetMarkerRadius};
+                const nO = newPoint.x + dim.width;
+                const xW = xAxis.dimensions().width;
+                poi1.setPos(newPoint)
+                if(nO > xW){
+                    console.log(`found overflow for ${id} - try to fix it by scaling`, newPoint.x + dim.width, extrema.xDataMax)
+                    const f = (xW / nO);
+                    poi1.scale(f );
+                }
             },
             toString() {
               return this.mutSvg().toString()

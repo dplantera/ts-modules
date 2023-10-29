@@ -10,10 +10,11 @@ describe("SvgChart", () => {
         const chart = await SvgChart.fromFile("template.svg", {
             axis: {id: {y: "y-axis", x: "x-axis"}, offset: {x: 0.1, y: 0.4}},
             graphs: {filledLines: [{data: seriesA, id: "tilgung"}, {data: seriesB, id: 'anfi'}]},
+            // pointsOfInterest: [{data: {x: 5, y: 5}, id: "poi-1"}]
             pointsOfInterest: [{data: {x: 7.5, y: 2.5}, id: "poi-1"}]
         });
         chart.update();
-        await chart.save("out.svg")
+        // await chart.save("out.svg")
         const expected = fs.readFileSync(path.resolve(process.cwd(), "test/fixtures/simple.svg"), "utf-8")
          equalWithoutNewLines(chart.toString(), expected)
     })
