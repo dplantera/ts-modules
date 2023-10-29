@@ -103,6 +103,15 @@ export module Svg {
             mutSelectById(id: string) {
                 return of(selectById(svg, id))
             },
+            setContent(content: string) {
+                // parser somehow adds an element of text to a text node
+                const child = Svg.selectBy(svg, {
+                    where: (n) => n.type === "text" && n.value !== "",
+                    skip: (n) => n.type !== "text" && n.name !== "text"
+                });
+                const text = svg.value !== "" ? svg : child ?? svg;
+                text.value = content
+            },
             bbox() {
                 return getBoundingBox(svg);
             },

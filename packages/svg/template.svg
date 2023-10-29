@@ -37,7 +37,7 @@
         <text style="fill: rgb(51, 51, 51); font-family: Arial, sans-serif; font-size: 13px; white-space: pre;" x="5"
               y="40">Detail Information
         </text>
-        <text style="fill: rgb(51, 51, 51); font-family: Arial; font-size: 13px;" x="5" y="60">value of x-axis,
+        <text style="fill: rgb(51, 51, 51); font-family: Arial; font-size: 13px;" x="5" y="60" id="poi-data">value of x-axis,
             value of y-axis
         </text>
         <path style="fill: rgb(216, 216, 216); stroke: rgb(0, 0, 0); stroke-dasharray: 4;" d="M 0 80 L 0 0">

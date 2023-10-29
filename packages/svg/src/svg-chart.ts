@@ -162,6 +162,9 @@ export module SvgChart {
             },
             updatePoi(id: string, posRaw: Vec2) {
                 const poi1 = svg.mutSelectById(id);
+                const poi1Data = poi1.mutSelectById("poi-data");
+                poi1Data.setContent(`${posRaw.x}, ${posRaw.y}`)
+
                 const poiPosTranslated = translate.findPointOnMax(posRaw.x);
                 // todo: get radius from poi marker
                 const dim = poi1.dimensions();
