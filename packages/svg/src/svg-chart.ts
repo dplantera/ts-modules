@@ -16,11 +16,14 @@ export module ChartTranslator {
         maxSpace: Vec2,
         minSpace: Vec2
     } & Pick<ChartOptions['axis'], 'offset'>) {
-        const {yDataMax, yDataMin, xDataMin, xDataMax} = extremePointsWithOffset(data, arg)
         const {maxSpace: {x: maxWidth, y: maxHeight}, minSpace: {x: minWidth, y: minHeight}} = arg;
         const flipY = (p: number) => maxHeight - p;
         return {
-            point(vec: Vec2) {
+            point(vec: Vec2, opt?: { withOffset: boolean }) {
+                const option = opt ?? {withOffset: true};
+                const extrema = option.withOffset ? extremePointsWithOffset(data, arg) : extremePoints(data)
+                const {yDataMax, yDataMin, xDataMin, xDataMax} = extrema
+
                 const scaledX = scale(vec.x, xDataMax, xDataMin, maxWidth, 0);
                 const scaledY = scale(vec.y, yDataMax, yDataMin, maxHeight, 0);
                 return {
@@ -28,12 +31,15 @@ export module ChartTranslator {
                     y: flipY(scaledY)
                 }
             },
-            points(vec: Array<Vec2>) {
-                return vec.map((p) => this.point(p))
+            points(vec: Array<Vec2>, opt?: { withOffset: boolean }) {
+                return vec.map((p) => this.point(p, opt))
             },
             findPointOnMax(givenX: number) {
                 const {yDataMax, yDataMin, xDataMin, xDataMax} = extremePoints(data)
-                const foundPoint = findPointAboveLine(givenX, {x: xDataMin, y: yDataMin}, {x: xDataMax, y: yDataMax })
+                const foundPoint = findPointAboveLine(givenX, {x: xDataMin, y: yDataMin}, {
+                    x: xDataMax,
+                    y: yDataMax
+                }, {maxHeight: yDataMax})
                 return this.point(foundPoint);
             }
         }
@@ -71,12 +77,10 @@ export module ChartTranslator {
         return (pos - posMin) / (posMax - posMin) * (chartPosMax - chartPosMin) + chartPosMin
     }
 
-    export function findPointAboveLine(givenX: number, p1: Vec2, p2: Vec2) {
-        // const slope = (p2.y - p1.y) / (p2.x - p1.x);
-        const top = p2.y - p1.y
-        const slope = top / (p2.x - p1.x);
-        const y = slope * givenX; // Equation of the line
-        const invertedYAxisAware = p2.y - y;
+    export function findPointAboveLine(givenX: number, p1: Vec2, p2: Vec2, arg: { maxHeight: number }) {
+        const slope = (p2.y - p1.y) / (p2.x - p1.x);
+        const y = slope * givenX;
+        const invertedYAxisAware = arg.maxHeight - y;
         return {x: givenX, y: invertedYAxisAware};
     }
 }
