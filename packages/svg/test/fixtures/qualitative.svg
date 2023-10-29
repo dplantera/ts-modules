@@ -1,0 +1,48 @@
+<svg viewBox="0 0 500 300" xmlns="http://www.w3.org/2000/svg" xmlns:bx="https://boxy-svg.com">
+    <defs>
+        <bx:grid x="-99.976" y="-50.094" width="49.531" height="49.874"/>
+        <pattern id="pattern-1" viewBox="0 0 100 100" patternUnits="userSpaceOnUse" preserveAspectRatio="none"
+                 width="100" height="100" bx:pinned="true">
+            <path style="fill: rgb(67, 65, 65); stroke: rgb(127, 125, 125);" d="M 99.822 0.354 L 0 80.007"/>
+        </pattern>
+    </defs>
+    <rect x="0" y="0" width="500" height="300" fill="white"/>
+    <g id="axis" style="">
+        <title>axis</title>
+        <path style="fill: rgb(216, 216, 216); stroke: rgb(0, 0, 0);" d="M 0 6.221 L 0.308 256.465" id="y-axis">
+            <title>y-axis</title>
+        </path>
+        <path style="fill: rgb(216, 216, 216); stroke: rgb(0, 0, 0);" d="M 500 256.465 L 0 256.465" id="x-axis">
+            <title>x-axis</title>
+        </path>
+    </g>
+    <g id="g-1" style="">
+        <title>g-1</title>
+        <path d="M 227.27272727272725 164.67235714285712 L 340.9090909090909 210.41467857142857 L 454.5454545454545 256.157 L 454.5454545454545 256.157 L 227.27272727272725 256.157 Z"
+              style="fill-rule: nonzero; paint-order: stroke markers; fill: rgb(111, 111, 111); stroke: rgb(255, 255, 255);"
+              id="anfi" bx:shape="triangle 228.095 164.247 229.826 91.559 0 0 1@501d7a8a">
+            <title>anfi</title>
+        </path>
+        <path style="fill: rgb(119, 146, 139); stroke: rgb(255, 255, 255);"
+              d="M 0 73.18771428571426 L 113.63636363636363 118.93003571428571 L 227.27272727272725 164.67235714285712 L 227.27272727272725 256.157 L 0 256.157 Z"
+              id="tilgung">
+            <title>tilgung</title>
+        </path>
+    </g>
+    <g transform="matrix(1,0,0,1,227.27272727272725,99.07073110925204) scale(0.8200203254200636)" id="poi-1">
+        <title>poi-1</title>
+        <text style="fill: rgb(51, 51, 51); font-family: Arial, sans-serif; font-weight: 700; white-space: pre; font-size: 15px;"
+              id="poi-label" x="5" y="15"><title>poi-label</title>Name of Series
+        </text>
+        <text style="fill: rgb(51, 51, 51); font-family: Arial, sans-serif; font-size: 13px; white-space: pre;" x="5"
+              y="40">Detail Information
+        </text>
+        <text style="fill: rgb(51, 51, 51); font-family: Arial; font-size: 13px;" x="5" y="60">value of x-axis,
+            value of y-axis
+        </text>
+        <path style="fill: rgb(216, 216, 216); stroke: rgb(0, 0, 0); stroke-dasharray: 4;" d="M 0 80 L 0 0">
+            <title>poi-mark</title>
+        </path>
+        <circle id="poi-marker" r="5" cx="0" cy="80" stroke="black" fill="darkgray"/>
+    </g>
+</svg>

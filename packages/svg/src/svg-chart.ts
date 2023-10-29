@@ -1,4 +1,5 @@
 import {Svg, Vec2} from "./svg";
+import * as _ from "lodash";
 
 export interface ChartOptions {
     axis: {
@@ -7,8 +8,8 @@ export interface ChartOptions {
         /** set the offset of the axis in percent so the graph will still have space on its edges  */
         offset: number | { x: number, y: number }
     },
-    graphs: { filledLines: Array<{ data: Array<Vec2>, id: string }> },
-    pointsOfInterest?: Array<{ data: Vec2, id: string }>
+    graphs: { filledLines: Array<{ data: Array<Vec2<number | string>>, id: string }> },
+    pointsOfInterest?: Array<{ data: Vec2<number | string>, id: string }>
 }
 
 export module ChartTranslator {
@@ -99,10 +100,42 @@ export module SvgChart {
         const xAxisOffset = axisOffset('x', opts);
         const yAxisOffset = axisOffset('y', opts);
 
+        // todo: refactor out logic to handle NaN type value for x-axis
+        const xValueGenerator = () => {
+            let counter = 0;
+            const cache: Record<string, number> = {};
+            return (id: string |number) =>  {
+                if(typeof id === "number") {
+                    return id;
+                }
+                if(_.isNil(cache[id])){
+                    cache[id] = counter++;
+                }
+                return cache[id];
+            }
+        }
+        const getXValue = xValueGenerator();
         // we need a bucket with all points - so we can scale with alignment
+        const mapFilledLines = opts.graphs.filledLines
+            .flatMap((v, gIdx) => v.data.flatMap((d, idx) => (
+                {
+                    y: d.y,
+                    ref: v.id,
+                    x: getXValue(d.x),
+                    value: d.x
+                }))
+            );
         const graphs = {
-            filledLines: opts.graphs.filledLines.flatMap(v => v.data.flatMap(d => ({...d, ref: v.id}))),
-            points: opts.pointsOfInterest ?? []
+            filledLines: mapFilledLines,
+            points: opts.pointsOfInterest?.map(d => ({
+                x: typeof d.data.x === "string" ? mapFilledLines.find(p => p.value === d.data.x)?.x ?? Number.parseFloat(d.data.x) : d.data.x,
+                y: d.data.y,
+                ref: d.id,
+                value: d.data.x
+            })) ?? []
+        } satisfies {
+            filledLines: Array<Vec2 & { ref: string, value: string | number }>;
+            points: Array<Vec2 & { ref: string, value: string | number }>
         };
 
         const translate = ChartTranslator.of(graphs.filledLines, {
@@ -149,8 +182,15 @@ export module SvgChart {
                 return this.mutSvg().toString()
             },
             update() {
-                opts.graphs.filledLines.forEach(({data, id}) => this.updatePosFilledLine(id, data));
-                opts.pointsOfInterest?.forEach(({id, data}) => this.updatePoi(id, data))
+                const graphsById = _.groupBy(graphs.filledLines, 'ref');
+                Object.entries(graphsById).forEach(([key, data]) => {
+                    this.updatePosFilledLine(key, data);
+                })
+
+                const poisById = _.groupBy(graphs.points, 'ref');
+                Object.entries(poisById).forEach(([key, data]) => {
+                    data.forEach(poi => this.updatePoi(key, poi));
+                })
             },
         }
     }

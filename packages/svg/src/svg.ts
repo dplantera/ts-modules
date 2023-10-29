@@ -179,9 +179,8 @@ export module Svg {
     }
 }
 
-
-export interface Vec2 {
-    x: number;
+export interface Vec2<XData = number> {
+    x: XData;
     y: number
 }
 
