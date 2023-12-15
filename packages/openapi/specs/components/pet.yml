@@ -1,0 +1,25 @@
+openapi: 3.0.3
+paths:
+components:
+  schemas:
+    PetBase:
+      type: object
+      discriminator:
+        propertyName: type
+      required: [ type ]
+      properties:
+        type:
+          type: string
+          enum: [ 'DOG' ]
+        name:
+          type: string
+    Pet:
+      oneOf:
+        - $ref: './cat.yml#/components/schemas/Cat'
+        - $ref: './dog.yml#/components/schemas/Dog'
+      discriminator:
+        propertyName: type
+        mapping:
+          DOG: './cat.yml#/components/schemas/Cat'
+          CAT: './dog.yml#/components/schemas/Dog'
+    

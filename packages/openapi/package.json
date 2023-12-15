@@ -1,0 +1,27 @@
+{
+  "name": "@dsp/openapi",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "pnpm test:utc & pnpm test:berlin",
+    "test:utc": "cross-env TZ=UTZ jest",
+    "test:berlin": "cross-env TZ=\"Europe/Berlin\" jest",
+    "clean": "rimraf dist",
+    "generate": "openapi-generator-cli generate",
+    "bundle": "openapi-generator-cli bundle specs/pets-api.yml dist/bundled.yml",
+    "lint": "eslint ./src/*.ts"
+  },
+  "dependencies": {
+    "@openapitools/openapi-generator-cli": "^2.7.0",
+    "dayjs": "^1.11.10"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^6.4.0",
+    "eslint": "^8.0.1",
+    "eslint-plugin-import": "^2.25.2",
+    "eslint-plugin-n": "^15.0.0 || ^16.0.0 ",
+    "eslint-plugin-promise": "^6.0.0",
+    "tsconfig": "workspace:*",
+    "typescript": "*"
+  }
+}

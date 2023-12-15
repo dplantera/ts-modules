@@ -1,0 +1,18 @@
+openapi: 3.0.3
+paths:
+components:
+  schemas:
+    DogEnum:
+      anyOf:
+          - type: string
+            enum: [ 'DOG_A', 'DOG_B' ]
+          - type: string
+    Dog:
+      allOf:
+        - $ref: './pet.yml#/components/schemas/PetBase'
+        - properties:
+            fluffy:
+              type: boolean
+            breed:
+              $ref: '#/components/schemas/DogEnum'
+
