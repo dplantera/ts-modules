@@ -1,6 +1,41 @@
 import { z } from 'zod'
 
 describe('zod test', () => {
+  test('invalid enum with unknown schema handling', () => {
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    const MyEnum = z.enum(['Value1', 'Value2', 'Value3'])
+    // eslint-disable-next-line @typescript-eslint/ban-types
+      .or(z.string().transform((e => e as string & {})).refine((value) => typeof value !== 'string', {
+        message: 'expected value to be of type string'
+      }))
+
+    const result = MyEnum.safeParse(2)
+    expect(result.success).toBeFalsy()
+  })
+  test('enum to value without annotation', () => {
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    const MyEnum = z.enum(['Value1', 'Value2', 'Value3']).or(z.string().transform((e => e as string & {})))
+
+    type Enum = z.infer<typeof MyEnum>
+
+    const a: Enum = MyEnum.parse('Value1')
+    switch (a) {
+      case 'Value1': { expect(a).toBe('Value1'); break }
+      case 'Value2': { throw new Error('test failed 2') }
+      default:
+        throw new Error('test failed 2')
+    }
+    const b: Enum = MyEnum.parse('Value4')
+    switch (b) {
+      case 'Value1': { throw new Error('test failed 2') }
+      case 'Value2': { throw new Error('test failed 2') }
+      default:
+        expect(b).toBe('Value4')
+    }
+    const result = MyEnum.safeParse(2)
+    expect(result.success).toBeFalsy()
+  })
+
   test('enum to value without default', () => {
     // eslint-disable-next-line @typescript-eslint/ban-types
     const MyEnum: z.ZodType<'Value1' | 'Value2' | string & {}> = z.enum(['Value1', 'Value2'])

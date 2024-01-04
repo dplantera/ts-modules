@@ -8,11 +8,12 @@
     "test:berlin": "cross-env TZ=\"Europe/Berlin\" jest",
     "clean": "rimraf dist",
     "generate": "openapi-generator-cli generate",
-    "bundle": "openapi-generator-cli bundle specs/pets-api.yml dist/bundled.yml",
+    "bundle": "redocly bundle specs/pets-api.yml -o dist/bundled.yml",
     "lint": "eslint ./src/*.ts"
   },
   "dependencies": {
     "@openapitools/openapi-generator-cli": "^2.7.0",
+    "@redocly/cli": "^1.6.0",
     "dayjs": "^1.11.10"
   },
   "devDependencies": {
