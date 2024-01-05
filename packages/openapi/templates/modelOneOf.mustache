@@ -1,0 +1,18 @@
+/**
+* @type {{classname}}{{#description}}
+    * {{{.}}}{{/description}}
+* @export
+* @discriminatedUnion {{name}}
+* @discriminatorProperty {{discriminator.propertyName}}
+* @discriminatorValues {{#discriminator.mappedModels}}{{mappingName}}{{^-last}} | {{/-last}}{{/discriminator.mappedModels}}
+* @subTypes {{#discriminator.mappedModels}}{{modelName}}{{^-last}} | {{/-last}}{{/discriminator.mappedModels}}
+*/
+export type {{classname}} = {{#discriminator}}{{!
+discriminator with mapped models - TypeScript discriminating union
+}}{{#mappedModels}}{ {{discriminator.propertyName}}: '{{mappingName}}' } & {{modelName}}{{^-last}} | {{/-last}}{{/mappedModels}}{{!
+
+discriminator only - fallback to not use the discriminator. Default model names are available but possibility of having null/nullable values could introduce more edge cases
+}}{{^mappedModels}}{{#oneOf}}{{{.}}}{{^-last}} | {{/-last}}{{/oneOf}}{{/mappedModels}}{{/discriminator}}{{!
+
+plain oneOf
+}}{{^discriminator}}{{#oneOf}}{{{.}}}{{^-last}} | {{/-last}}{{/oneOf}}{{/discriminator}} | { {{discriminator.propertyName}}: UNKNOWN_ENUM_VARIANT, [prop:string]:unknown};

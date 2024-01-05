@@ -10,7 +10,6 @@ components:
       properties:
         type:
           type: string
-          enum: [ 'DOG' ]
         name:
           type: string
     Pet:
@@ -20,6 +19,6 @@ components:
       discriminator:
         propertyName: type
         mapping:
-          DOG: './cat.yml#/components/schemas/Cat'
-          CAT: './dog.yml#/components/schemas/Dog'
+          DOG: './dog.yml#/components/schemas/Dog'
+          CAT: './cat.yml#/components/schemas/Cat'
     

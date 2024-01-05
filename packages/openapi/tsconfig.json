@@ -1,14 +1,19 @@
 {
-  "extends": "tsconfig/base.json",
+  "extends": "./node_modules/tsconfig/base.json",
   "compilerOptions": {
     "outDir": "dist",
     "noImplicitReturns": true,
-    "alwaysStrict": true
+    "alwaysStrict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "noImplicitThis": true
   },
   "include": [
-    "index.ts", "src"
+    "index.ts", "src", "oa-cli.ts"
   ],
   "exclude": [
-    "node_modules", ".eslintrc.js"
+    "node_modules", "src/**/*.test.ts"
   ]
 }

@@ -3,10 +3,8 @@ paths:
 components:
   schemas:
     DogEnum:
-      anyOf:
-          - type: string
-            enum: [ 'DOG_A', 'DOG_B' ]
-          - type: string
+      type: string
+      enum: [ 'DOG_A', 'DOG_B' ]
     Dog:
       allOf:
         - $ref: './pet.yml#/components/schemas/PetBase'

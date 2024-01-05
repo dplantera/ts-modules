@@ -5,3 +5,6 @@ packages/*/lib
 .idea
 dist
 turbo-build.log
+tmp
+out
+out.txt

@@ -1,28 +1,45 @@
 {
   "name": "@dsp/openapi",
   "main": "dist/index.js",
+  "version": "0.0.0",
+  "type": "module",
+  "bin": {
+    "openapicli": "dist/oa-cli.js",
+    "oa-cli": "dist/oa-cli.js",
+    "oacli": "dist/oa-cli.js"
+  },
+  "files": ["templates"],
   "scripts": {
-    "build": "tsc",
-    "test": "pnpm test:utc & pnpm test:berlin",
-    "test:utc": "cross-env TZ=UTZ jest",
-    "test:berlin": "cross-env TZ=\"Europe/Berlin\" jest",
+    "build": "run-s ts:build cp:templates",
+    "ts:build": "tsc",
+    "cp:templates": "copyfiles -u 1 \"templates/**/*\" -e \"**/*.json\" dist/templates",
+    "api:build": "run-s api:bundle api:generate api:post-process",
+    "api:bundle": "redocly bundle specs/pets-api.yml -o tmp/pets-api.yml",
+    "api:generate": "openapi-generator-cli generate",
+    "api:post-process": "ts-node ./src/ProcessModels.ts",
+    "api:template:variables": "openapi-generator-cli author template -g typescript-axios",
     "clean": "rimraf dist",
-    "generate": "openapi-generator-cli generate",
-    "bundle": "redocly bundle specs/pets-api.yml -o dist/bundled.yml",
     "lint": "eslint ./src/*.ts"
   },
   "dependencies": {
     "@openapitools/openapi-generator-cli": "^2.7.0",
-    "@redocly/cli": "^1.6.0",
-    "dayjs": "^1.11.10"
+    "@redocly/openapi-core": "^1.6.0",
+    "commander": "^11.1.0",
+    "ts-morph": "^21.0.1",
+    "lodash": "*"
   },
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^6.4.0",
+    "@redocly/cli": "^1.6.0",
+    "@types/lodash": "^4.14.202",
+    "@typescript-eslint/eslint-plugin": "^6.17.0",
+    "axios": "^1.6.5",
     "eslint": "^8.0.1",
     "eslint-plugin-import": "^2.25.2",
     "eslint-plugin-n": "^15.0.0 || ^16.0.0 ",
     "eslint-plugin-promise": "^6.0.0",
-    "tsconfig": "workspace:*",
-    "typescript": "*"
+    "npm-run-all": "*",
+    "type-fest": "*",
+    "typescript": "*",
+    "tsconfig": "workspace:*"
   }
 }
