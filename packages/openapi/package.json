@@ -11,19 +11,23 @@
   "files": ["templates"],
   "scripts": {
     "build": "run-s ts:build cp:templates",
-    "ts:build": "tsc",
+    "ts:build": "tsc -p tsconfig.build.json",
+    "ts:check": "tsc",
     "cp:templates": "copyfiles -u 1 \"templates/**/*\" -e \"**/*.json\" dist/templates",
     "api:build": "run-s api:bundle api:generate api:post-process",
     "api:bundle": "redocly bundle specs/pets-api.yml -o tmp/pets-api.yml",
-    "api:generate": "openapi-generator-cli generate",
+    "api:generate": "openapi-generator-cli generate -g typescript-axios -i tmp/pets-api.yml -o out -t templates",
     "api:post-process": "ts-node ./src/ProcessModels.ts",
     "api:template:variables": "openapi-generator-cli author template -g typescript-axios",
-    "clean": "rimraf dist",
-    "lint": "eslint ./src/*.ts"
+    "schemas:generate": "openapi-zod-client \"./tmp/pets-api.yml\" -o out/zod.ts -t templates/schemas-only.hbs",
+    "test:esm": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
+    "clean": "rimraf dist out tmp",
+    "lint": "eslint \"./src/*.ts\" index.ts oa-cli.ts"
   },
   "dependencies": {
     "@openapitools/openapi-generator-cli": "^2.7.0",
     "@redocly/openapi-core": "^1.6.0",
+    "openapi-zod-client": "^1.15.0",
     "commander": "^11.1.0",
     "ts-morph": "^21.0.1",
     "lodash": "*"

@@ -5,11 +5,13 @@ module.exports = {
     },
     extends: [
         "eslint:recommended",
-        "plugin:@typescript-eslint/recommended"
+        "plugin:@typescript-eslint/recommended",
     ],
-    "overrides": [],
+    rules: {
+        "@typescript-eslint/no-namespace": "off"
+    },
     "parserOptions": {
         "ecmaVersion": "latest",
         "sourceType": "module",
-    }
+    },
 }

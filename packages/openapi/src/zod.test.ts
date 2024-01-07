@@ -4,6 +4,17 @@ import {Opaque} from "type-fest";
 
 
 describe('zod test', () => {
+    test("merge allOf discriminator when subschema defines a more concrete value than parent", () => {
+        const Parent = z.object({type: z.string()})
+        const A = z.object({type: z.literal('A'), a: z.string()})
+
+        const MergedA = Parent.merge(A);
+        // @ts-expect-error prop 'a' is missing
+        const m: z.infer<typeof MergedA> = {type: 'A' }
+
+        expect(MergedA.safeParse({type: 'C', a: 'value'}).success).toEqual(false)
+        expect(MergedA.safeParse({type: 'A', a: 'value'}).success).toEqual(true)
+    })
 
     test('enum to value with opaque annotation', () => {
         // eslint-disable-next-line @typescript-eslint/ban-types
