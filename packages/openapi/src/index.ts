@@ -1,10 +1,10 @@
 import path from "path";
 import process from "process";
 import { bundleOpenapi } from "./bundle.js";
-import { postProcessModels } from "./post-process.js";
-import { tempFolder } from "./folder.js";
+import { Folder } from "./folder.js";
 import { generateTypescriptAxios } from "./generators/ts-axios.js";
 import { generateZodSchemas } from "./generators/index.js";
+import { postProcessModels } from "./post-process/index.js";
 
 export async function generateOpenapi(
   inputFile: string | undefined,
@@ -26,7 +26,7 @@ export async function generateOpenapi(
 
     console.log(`start post processing:`, outDir);
     postProcessModels(outDir);
-    tempFolder().deleteAll();
+    Folder.temp().clear();
     return outDir;
   } catch (e: unknown) {
     if (e instanceof Error) {

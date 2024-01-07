@@ -1,63 +1,7 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import { Project, SourceFile, StructureKind, SyntaxKind } from "ts-morph";
 import _ from "lodash";
-import * as path from "node:path";
-import * as fs from "fs";
-import * as process from "process";
-import { folder } from "./folder.js";
+import { SourceFile, StructureKind, SyntaxKind } from "ts-morph";
 
-/**
- * Add discriminator values on oneOf interfaces
- * @param outDir File containing all ts interfaces
- */
-export function postProcessModels(outDir: string) {
-  const out = folder(outDir);
-  const tsApiPath = out.makeFilePath("api.ts");
-  const zodSchemasPath = out.makeFilePath("zod.ts");
-
-  const project = new Project();
-  project.addSourceFileAtPath(tsApiPath);
-  project.addSourceFileAtPath(zodSchemasPath);
-
-  const tsApi = project.getSourceFile(path.basename(tsApiPath));
-  if (_.isNil(tsApi)) {
-    throw `Error: Expected source file for provided path: srcFile: ${tsApiPath}, provided: ${outDir} `;
-  }
-  ensureDiscriminatorValues(tsApi);
-
-  const zodApi = project.getSourceFile(path.basename(zodSchemasPath));
-  if (_.isNil(zodApi)) {
-    throw `Error: Expected source file for provided path: srcFile: ${tsApiPath}, provided: ${outDir} `;
-  }
-  fixZodSchemas(zodApi);
-
-  project.saveSync();
-  deleteUnwantedFiles(tsApiPath);
-}
-
-function fixZodSchemas(zodApi: SourceFile) {
-  const mergeProperties = findMergeSignatureWithAnd(zodApi);
-  mergeProperties.forEach((p) => {
-    const identifier = p
-      .getChildrenOfKind(SyntaxKind.Identifier)
-      .filter((id) => id.getText() === "and");
-    identifier.forEach((id) => {
-      id.replaceWithText("merge");
-    });
-  });
-}
-
-function deleteUnwantedFiles(apiPath: string) {
-  folder(apiPath).delete(
-    "git_push.sh",
-    ".gitignore",
-    ".openapi-generator",
-    ".npmignore",
-    ".openapi-generator-ignore"
-  );
-}
-
-function ensureDiscriminatorValues(api: SourceFile) {
+export function tsEnsureDiscriminatorValues(api: SourceFile) {
   const discriminatedUnions = findDiscriminatedUnions(api);
   const interfaces = api.getChildrenOfKind(SyntaxKind.InterfaceDeclaration);
   discriminatedUnions.forEach(({ node, discriminator }) => {
@@ -134,7 +78,7 @@ function ensureDiscriminatorValues(api: SourceFile) {
   });
 }
 
-function findMergeSignatureWithAnd(api: SourceFile) {
+export function findMergeSignatureWithAnd(api: SourceFile) {
   return api
     .getDescendantsOfKind(SyntaxKind.VariableDeclaration)
     .flatMap((n) => {
@@ -181,17 +125,6 @@ function findDiscriminatedUnions(api: SourceFile) {
           ]
         : [];
     });
-}
-
-function getSourceFile(
-  filePath: string,
-  fallBackSrcFile: string = "unknown.ts"
-) {
-  return fs.lstatSync(filePath).isDirectory()
-    ? path.isAbsolute(filePath)
-      ? path.resolve(filePath, fallBackSrcFile)
-      : path.resolve(process.cwd(), fallBackSrcFile)
-    : filePath;
 }
 
 function isDefined<T>(v: T | undefined): v is NonNullable<T> {

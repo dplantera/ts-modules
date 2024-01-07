@@ -1,8 +1,8 @@
-import { postProcessModels } from "./post-process.js";
 import { bundleOpenapi } from "./bundle.js";
 import { generateOpenapi } from "./index.js";
 import { generateTypescriptAxios } from "./generators/ts-axios.js";
 import { generateZodSchemas } from "./generators/zod.js";
+import { postProcessModels } from "./post-process/post-process.js";
 
 test("bundle", async () => {
   const bundled = await bundleOpenapi("specs/pets-api.yml");
