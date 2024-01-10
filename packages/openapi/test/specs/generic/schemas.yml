@@ -1,0 +1,70 @@
+openapi: "3.1.0"
+paths:
+info:
+  description: "Nested discriminated Union"
+  title: Nested
+  version: 0.0.0
+components:
+  schemas:
+    Pets:
+      type: array
+      maxItems: 100
+      items:
+        $ref: "#/components/schemas/Pet"
+
+    Pet:
+      oneOf:
+        - $ref: '#/components/schemas/Cat'
+        - $ref: '#/components/schemas/Dog'
+      discriminator:
+        propertyName: type
+        mapping:
+          DOG: '#/components/schemas/Dog'
+          CAT: '#/components/schemas/Cat'
+
+    PetBase:
+      type: object
+      required:
+        - id
+        - name
+      properties:
+        id:
+          type: integer
+          format: int64
+        type:
+          type: string
+      discriminator:
+        propertyName: type
+
+    Cat:
+      oneOf:
+        - $ref: '#/components/schemas/Seam'
+        - $ref: '#/components/schemas/ShortHair'
+      discriminator:
+        propertyName: catType
+        mapping:
+          SEAM: "#/Seam"
+          SHORT: "#/ShortHair"
+
+    Dog:
+      allOf:
+        - $ref: '#/components/schemas/PetBase'
+        - properties:
+            bark:
+              type: string
+          required: [ bark ]
+
+    Seam:
+      allOf:
+        - $ref: './cat_base.yml#/CatBase'
+        - properties:
+            catType: { type: string, default: "SEAM" }
+            angryLevel: { type: string }
+
+    ShortHair:
+      allOf:
+        - $ref: './cat_base.yml#/CatBase'
+        - properties:
+            catType: { type: string, default: "SHORT" }
+            angryLevel: { type: string }
+

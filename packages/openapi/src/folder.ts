@@ -73,7 +73,10 @@ export module Folder {
         content: string | object | NodeJS.ArrayBufferView
       ) {
         const filePath = this.makeFilePath(fileName);
-        fs.writeFileSync(this.makeFilePath(fileName), stringifyYaml(content));
+        fs.writeFileSync(
+          this.makeFilePath(fileName),
+          stringifyYaml(content, { noRefs: true })
+        );
         return filePath;
       },
       makeFilePath(file: string) {

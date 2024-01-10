@@ -1,0 +1,241 @@
+openapi: 3.0.3
+info:
+  license:
+    name: MIT
+  title: Swagger Petstore
+  version: 1.0.0
+servers:
+- url: http://petstore.swagger.io/v1
+paths:
+  /pets:
+    get:
+      operationId: listPets
+      parameters:
+      - $ref: '#/components/parameters/PathPetId'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pets'
+          description: A paged array of pets
+          headers:
+            x-next:
+              description: A link to the next page of responses
+              schema:
+                type: string
+        default:
+          $ref: '#/components/responses/Default'
+      summary: List all pets
+      tags:
+      - pets
+    post:
+      operationId: createPets
+      responses:
+        '201':
+          description: Null response
+        default:
+          $ref: '#/components/responses/Default'
+      summary: Create a pet
+      tags:
+      - pets
+  /pets/{petId}:
+    get:
+      operationId: showPetById
+      parameters:
+      - $ref: '#/components/parameters/PathPetId'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pet'
+          description: Expected response to a valid request
+        default:
+          $ref: '#/components/responses/Default'
+      summary: Info for a specific pet
+      tags:
+      - pets
+components:
+  examples:
+    String:
+      description: default string example
+      value: some string
+  parameters:
+    PathPetId:
+      description: The id of the pet to retrieve
+      in: path
+      name: petId
+      required: true
+      schema:
+        type: string
+  responses:
+    Default:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+      description: unexpected error
+  schemas:
+    AnotherExternalApiToy:
+      title: AnotherExternalApiToy
+      properties:
+        fluffLevel:
+          allOf:
+            - $ref: '#/components/schemas/FluffLevel'
+            - description: "MyFluffLeve"
+        id:
+          type: string
+        kind:
+          type: string
+        price:
+          type: string
+        targetGroup:
+          default: CHILDREN
+          type: string
+          x-extensible-enum:
+          - PETS
+          - CHILDREN
+      required:
+      - id
+      - price
+      - kind
+    Ball:
+      allOf:
+      - $ref: '#/components/schemas/AnotherExternalApiToy'
+      - title: Ball
+    Color:
+      allOf:
+      - properties:
+          untitledProp:
+            type: string
+      properties:
+        colorId:
+          type: string
+        untitled:
+          $ref: '#/components/schemas/UntitledImport'
+      type: object
+    Error:
+      properties:
+        code:
+          $ref: '#/components/schemas/HttpErrorCode'
+        message:
+          type: string
+        titledSchema:
+          $ref: '#/components/schemas/TitledSchema'
+      required:
+      - code
+      - message
+      type: object
+    ExternalApiToy:
+      allOf:
+      - $ref: '#/components/schemas/AnotherExternalApiToy'
+      properties:
+        id:
+          type: string
+        kind:
+          type: string
+        price:
+          type: string
+        someEnum:
+          enum:
+          - FOO
+          - BAR
+          title: FooBar
+          type: string
+    FluffLevel:
+      enum:
+      - A
+      - B
+      - C
+      type: string
+    Fluffy:
+      properties:
+        fluffLevel:
+          $ref: '#/components/schemas/FluffLevel'
+    FluffyTeddy:
+      allOf:
+      - $ref: '#/components/schemas/Teddy'
+      - $ref: '#/components/schemas/Fluffy'
+    HttpErrorCode:
+      format: int32
+      type: integer
+    MyPetToy:
+      $ref: '#/components/schemas/PetToy'
+    Pet:
+      example:
+        bar: 1234
+        foo: ''
+        foobar: true
+      properties:
+        favFluffLevel:
+          $ref: '#/components/schemas/FluffLevel'
+        id:
+          format: int64
+          type: integer
+        leastFavToy:
+          $ref: '#/components/schemas/ExternalApiToy'
+        name:
+          example:
+            description: default string example
+            value: some string
+          type: string
+        tag:
+          example:
+            $ref: '#/components/examples/String'
+          type: string
+        toy:
+          $ref: '#/components/schemas/Toy'
+      required:
+      - id
+      - name
+      type: object
+    PetToy:
+      discriminator:
+        mapping:
+          BALL: '#/components/schemas/Ball'
+          TEDDY: '#/components/schemas/FluffyTeddy'
+        propertyName: kind
+      oneOf:
+      - $ref: '#/components/schemas/Ball'
+      - $ref: '#/components/schemas/FluffyTeddy'
+    Pets:
+      items:
+        $ref: '#/components/schemas/Pet'
+      maxItems: 100
+      type: array
+    Teddy:
+      allOf:
+      - $ref: '#/components/schemas/AnotherExternalApiToy'
+      - title: Teddy
+    TitledSchema:
+      properties:
+        titledProp:
+          type: string
+      title: Titled Schema
+    Toy:
+      allOf:
+      - $ref: '#/components/schemas/ExternalApiToy'
+      - properties:
+          subId:
+            type: string
+        required:
+        - string
+      - title: Toy
+        properties:
+          color:
+            $ref: '#/components/schemas/Color'
+          name:
+            type: string
+          relates:
+            $ref: '#/components/schemas/MyPetToy'
+          targetGroup:
+            default: CHILDREN
+            type: string
+            x-extensible-enum:
+            - PETS
+            - CHILDREN
+    UntitledImport:
+      properties:
+        untitledProp:
+          type: string

@@ -5,26 +5,28 @@ import { Folder } from "./folder.js";
 import { generateTypescriptAxios } from "./generators/ts-axios.js";
 import { generateZodSchemas } from "./generators/index.js";
 import { postProcessModels } from "./post-process/index.js";
+import { postProcessSpec } from "./post-process/post-process.js";
 
 export async function generateOpenapi(
   inputFile: string | undefined,
   outputFile: string | undefined
 ) {
   try {
-    const spec = inputFile ?? "specs/pets-api.yml";
-    const output = outputFile ?? "out";
+    const spec = inputFile ?? "test/specs/pets-modular/pets-api.yml";
+    const output = outputFile ?? "test/out";
     const pathToApi = path.resolve(process.cwd(), spec);
 
     console.log("start bundle: ", pathToApi);
-    const bundled = await bundleOpenapi(pathToApi);
+    const { parsed, outFile: bundled } = await bundleOpenapi(pathToApi);
 
     console.log(`start generate typescript-axios:`, bundled, output);
     const outDir = generateTypescriptAxios(bundled, output);
 
     console.log(`start generate typescript-axios:`, bundled, output);
-    await generateZodSchemas(bundled, output);
+    await generateZodSchemas(parsed, output);
 
     console.log(`start post processing:`, outDir);
+    postProcessSpec(parsed);
     postProcessModels(outDir);
     Folder.temp().clear();
     return outDir;

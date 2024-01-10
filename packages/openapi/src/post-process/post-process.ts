@@ -1,13 +1,19 @@
-import { Folder } from "../folder.js";
-import { Project, SourceFile } from "ts-morph";
+import { File, Folder } from "../folder.js";
+import { Project, SourceFile, SyntaxKind } from "ts-morph";
 import path from "node:path";
 import _ from "lodash";
 import { tsEnsureDiscriminatorValues } from "./ts-ensure-discriminator-values.js";
 import { zodReplaceAnd } from "./zod-replace-and.js";
 import { deleteUnwantedFiles } from "./delete-unwanted-files.js";
+import { OpenApiBundled } from "../bundle.js";
+import { mergeAllOf } from "./merge-all-of.js";
+
+export function postProcessSpec(bundled: OpenApiBundled) {
+  return mergeAllOf(bundled);
+}
 
 /**
- * Add discriminator values on oneOf interfaces
+ * Processes resulting models
  * @param outDir File containing all ts interfaces
  */
 export function postProcessModels(outDir: string) {
@@ -36,4 +42,22 @@ export function postProcessModels(outDir: string) {
   deleteUnwantedFiles(tsApiPath);
 }
 
-function zodEnsureUnknownEnumVariant(zodApi: SourceFile) {}
+function zodEnsureUnknownEnumVariant(zodApi: SourceFile) {
+  const enums = findEnums(zodApi);
+  enums.forEach((p) => {
+    p.replaceWithText(`${p.getText()}.or(UNKNOWN_SCHEMA)`);
+  });
+}
+
+export function findEnums(api: SourceFile) {
+  return api.getDescendantsOfKind(SyntaxKind.CallExpression).flatMap((n) => {
+    // eslint-disable-next-line no-useless-escape
+    const isEnumExpression = /\.enum\s*\([\[\]\s\w,_\-"']+\)\s*$/u.test(
+      n.getText()
+    );
+    if (!isEnumExpression) {
+      return [];
+    }
+    return [n];
+  });
+}

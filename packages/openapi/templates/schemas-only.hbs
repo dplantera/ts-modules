@@ -1,4 +1,7 @@
 import { z } from "zod";
+import { UNKNOWN_ENUM_VARIANT } from './common.js';
+
+const UNKNOWN_SCHEMA = z.string().transform((e => e as UNKNOWN_ENUM_VARIANT))
 
 {{#each schemas}}
 const {{@key}} = {{{this}}};

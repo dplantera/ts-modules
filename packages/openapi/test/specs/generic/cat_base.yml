@@ -1,0 +1,9 @@
+CatBase:
+  allOf:
+    - $ref: './schemas.yml#/components/schemas/PetBase'
+    - properties:
+        color: { type: string }
+        catType: { type: string , enum: [SEAM, SHORT], title: CatType}
+      required: [ color ]
+  discriminator:
+    propertyName: catType
