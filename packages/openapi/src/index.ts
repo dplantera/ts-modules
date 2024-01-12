@@ -1,3 +1,4 @@
+import "./lodash-extended.js";
 import path from "path";
 import process from "process";
 import { bundleOpenapi } from "./bundle.js";
@@ -5,11 +6,13 @@ import { Folder } from "./folder.js";
 import { generateTypescriptAxios } from "./generators/ts-axios.js";
 import { generateZodSchemas } from "./generators/index.js";
 import { postProcessModels } from "./post-process/index.js";
+
 import { postProcessSpec } from "./post-process/post-process.js";
 
 export async function generateOpenapi(
   inputFile: string | undefined,
-  outputFile: string | undefined
+  outputFile: string | undefined,
+  params?: { clearTemp: boolean }
 ) {
   try {
     const spec = inputFile ?? "test/specs/pets-modular/pets-api.yml";
@@ -17,7 +20,10 @@ export async function generateOpenapi(
     const pathToApi = path.resolve(process.cwd(), spec);
 
     console.log("start bundle: ", pathToApi);
-    const { parsed, outFile: bundled } = await bundleOpenapi(pathToApi);
+    const { parsed, outFile: bundled } = await bundleOpenapi(
+      pathToApi,
+      postProcessSpec
+    );
 
     console.log(`start generate typescript-axios:`, bundled, output);
     const outDir = generateTypescriptAxios(bundled, output);
@@ -26,9 +32,8 @@ export async function generateOpenapi(
     await generateZodSchemas(parsed, output);
 
     console.log(`start post processing:`, outDir);
-    postProcessSpec(parsed);
     postProcessModels(outDir);
-    Folder.temp().clear();
+    if (params?.clearTemp ?? true) Folder.temp().clear();
     return outDir;
   } catch (e: unknown) {
     if (e instanceof Error) {

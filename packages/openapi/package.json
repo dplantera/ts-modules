@@ -23,6 +23,7 @@
     "api:template:variables": "openapi-generator-cli author template -g typescript-axios",
     "schemas:generate": "openapi-zod-client \"./tmp/pets-api.yml\" -o out/zod.ts -t templates/schemas-only.hbs",
     "test:esm": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
+    "test:esm:update": "cross-env NODE_OPTIONS=--experimental-vm-modules jest -u",
     "clean": "rimraf dist out tmp",
     "lint": "eslint \"./src/*.ts\" index.ts oa-cli.ts"
   },
@@ -32,6 +33,7 @@
     "commander": "^11.1.0",
     "js-yaml": "^4.1.0",
     "jsonpointer": "^5.0.1",
+    "merge-json-schemas": "^1.0.0",
     "lodash": "*",
     "topological-sort": "^0.3.0",
     "openapi-zod-client": "^1.15.0",

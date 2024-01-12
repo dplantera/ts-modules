@@ -1,4 +1,4 @@
-import { File, Folder } from "../folder.js";
+import { Folder } from "../folder.js";
 import { Project, SourceFile, SyntaxKind } from "ts-morph";
 import path from "node:path";
 import _ from "lodash";

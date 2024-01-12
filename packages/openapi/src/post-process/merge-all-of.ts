@@ -8,6 +8,10 @@ import { z, ZodString } from "zod";
 import pointer from "jsonpointer";
 import { TopologicalSort } from "topological-sort";
 import { isRef } from "@redocly/openapi-core";
+// noinspection TypeScriptCheckImport
+// eslint-disable-next-line
+// @ts-ignore
+import mergeJsonSchemas from "merge-json-schemas";
 
 type Node = oas30.SchemaObject | undefined | { [key: string]: Node };
 type Context = {
@@ -27,26 +31,69 @@ export function mergeAllOf(bundled: OpenApiBundled) {
 function doMerge(schema: any, ctx: Context) {
   const subSchemas: Array<oas30.ReferenceObject | oas30.SchemaObject> =
     schema.allOf ?? [];
-  const merged = mergeSubSchemas(subSchemas, ctx);
 
+  const clonedSchemas = _.cloneDeep(subSchemas);
+  const resolvedSchemas = clonedSchemas.map((d) =>
+    resolveRef(d, ctx, { deleteRef: false })
+  );
+
+  // include dangling properties {allOf: [], danglingA: {}, danglingB: [], danglingC: null, ... }
+  const danglingProperties = { ..._.omit(schema, "allOf") };
+  resolvedSchemas.unshift(danglingProperties);
+
+  const discriminatedParent = _.cloneDeep(
+    resolvedSchemas.toReversed().find((p) => !_.isNil(p.discriminator))
+  );
+  if (_.isDefined(discriminatedParent) && resolvedSchemas.length <= 2) {
+    return schema;
+  }
+
+  const merged = mergeSubSchemas(resolvedSchemas, ctx);
+
+  if (_.isDefined(discriminatedParent)) {
+    // we set back the ref for parents so we have nice inheritance for java
+    const parent = _.isDefined(discriminatedParent["$ref"])
+      ? _.pick(discriminatedParent, "$ref")
+      : discriminatedParent;
+    delete merged["$ref"];
+    delete merged.allOf;
+    schema.allOf = [parent, merged];
+    cleanObj(schema, ["allOf"]);
+    return;
+  }
+
+  // { allOf: [a, b] } ==> {...a, ...b}
   Object.assign(schema, merged);
   delete schema.allOf;
+  delete schema["$ref"];
+}
+
+function cleanObj<T extends Record<string, any>>(
+  obj: T,
+  except: Array<keyof T>
+) {
+  Object.getOwnPropertyNames(obj).forEach((prop) => {
+    if (except.includes(prop)) {
+      return;
+    }
+    delete obj[prop];
+  });
 }
 
 function mergeSubSchemas(
-  subSchemas: Array<oas30.ReferenceObject | oas30.SchemaObject>,
+  _resolvedSchemas: Array<oas30.SchemaObject>,
   ctx: Context
 ) {
-  const clonedSchemas = _.cloneDeep(subSchemas);
-  const firstSchema = resolveRef(clonedSchemas[0], ctx);
-
-  // todo: handle merge
-  return clonedSchemas
+  const firstSchema = _resolvedSchemas[0];
+  const subschemas = _resolvedSchemas
     .slice(1)
-    .map((d) => resolveRef(d, ctx))
-    .reduce((acc, curr) => {
-      return Object.assign(acc, curr);
-    }, firstSchema);
+    .map((d) => resolveRef(d, ctx, { deleteRef: true }));
+
+  const merged = subschemas.reduce((acc, curr) => {
+    const merged = mergeJsonSchemas([acc, curr]);
+    return Object.assign(acc, merged);
+  }, firstSchema);
+  return merged;
 }
 
 function findSchemaObjectsWithAllOf(bundled: OpenApiBundled) {
@@ -140,18 +187,25 @@ function toNodeId(path: Array<string>) {
 
 function resolveRef(
   data: { $ref: string } | unknown,
-  ctx: Context
-): oas30.SchemaObject {
+  ctx: Context,
+  params?: { deleteRef: boolean }
+): typeof params extends { deletedRef: true }
+  ? oas30.SchemaObject
+  : oas30.SchemaObject & { $ref?: string } {
   if (!isRef(data)) {
     return data as oas30.SchemaObject;
   }
+  const ref = data.$ref;
   try {
-    const propPath = data.$ref.replace("#/", "/");
+    const propPath = ref.replace("#/", "/");
+    if (params?.deleteRef ?? false) {
+      delete (data as any).$ref;
+    }
     return pointer.get(ctx.root, propPath);
   } catch {
-    throw `Error: could not resolve ref ${
-      data.$ref
-    } in: ${ctx.path.current.join("/")}`;
+    throw `Error: could not resolve ref ${ref} in: ${ctx.path.current.join(
+      "/"
+    )}`;
   }
 }
 
