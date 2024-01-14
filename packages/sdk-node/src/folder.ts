@@ -5,7 +5,6 @@ import fs from "node:fs";
 import { stringifyYaml } from "@redocly/openapi-core";
 import { _ } from "@dsp/ts-sdk";
 
-// todo: move to node core
 export module File {
   export function isFilePath(filePath: string) {
     return /\.\w+$/u.test(filePath);
