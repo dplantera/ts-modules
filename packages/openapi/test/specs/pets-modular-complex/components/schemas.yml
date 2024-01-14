@@ -19,9 +19,9 @@ components:
         toy:
           $ref: './schemas/other-schemas/toy.yml#/components/schemas/Toy'
         leastFavToy:
-          $ref:  './../../external/external-api.yml#/components/schemas/Toy'
+          $ref:  './../external/external-api.yml#/components/schemas/Toy'
         favFluffLevel:
-          $ref:  './../../external/external-api.yml#/components/schemas/Fluffy/properties/fluffLevel'
+          $ref:  './../external/external-api.yml#/components/schemas/Fluffy/properties/fluffLevel'
         tag:
           type: string
           example:

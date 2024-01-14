@@ -121,6 +121,23 @@ export module SpecResolver {
     return path.join("::");
   }
 
+  export function resolveRefNode(
+    data: { $ref: string } | unknown,
+    ctx: Context,
+    params?: { deleteRef: boolean }
+  ) {
+    if (!isRef(data)) {
+      return {
+        pointer: undefined,
+        resolved: resolveRef(data, ctx, params),
+      };
+    }
+    return {
+      pointer: data["$ref"],
+      resolved: resolveRef(data, ctx, params),
+    };
+  }
+
   export function resolveRef(
     data: { $ref: string } | unknown,
     ctx: Context,

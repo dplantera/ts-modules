@@ -37,9 +37,11 @@
     "@dsp/node-sdk": "*",
     "topological-sort": "^0.3.0",
     "openapi-zod-client": "^1.15.0",
-    "ts-morph": "^21.0.1"
+    "ts-morph": "^21.0.1",
+    "json-schema-merge-allof": "^0.8.1"
   },
   "devDependencies": {
+    "@types/json-schema-merge-allof": "^0.6.5",
     "@redocly/cli": "^1.6.0",
     "@typescript-eslint/eslint-plugin": "^6.17.0",
     "axios": "^1.6.5",

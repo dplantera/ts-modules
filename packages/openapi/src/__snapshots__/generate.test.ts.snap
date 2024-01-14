@@ -33,26 +33,14 @@ import { BASE_PATH, COLLECTION_FORMATS, BaseAPI, RequiredError, operationServerM
  * @export
  * @interface Cat
  */
-export interface Cat {
-    /**
-     * 
-     * @type {string}
-     * @memberof Cat
-     * @discriminator type
-     */
-    type: 'CAT';
-    /**
-     * 
-     * @type {string}
-     * @memberof Cat
-     */
-    name?: string;
+export interface Cat extends PetBase {
     /**
      * 
      * @type {string}
      * @memberof Cat
      */
     breed?: CatBreedEnum;
+    type: 'CAT';
 }
 
 
@@ -69,20 +57,7 @@ export type CatBreedEnum = typeof CatBreedEnum[keyof typeof CatBreedEnum] | UNKN
  * @export
  * @interface Dog
  */
-export interface Dog {
-    /**
-     * 
-     * @type {string}
-     * @memberof Dog
-     * @discriminator type
-     */
-    type: 'DOG';
-    /**
-     * 
-     * @type {string}
-     * @memberof Dog
-     */
-    name?: string;
+export interface Dog extends PetBase {
     /**
      * 
      * @type {boolean}
@@ -95,6 +70,7 @@ export interface Dog {
      * @memberof Dog
      */
     breed?: DogEnum;
+    type: 'DOG';
 }
 
 
@@ -642,34 +618,22 @@ import { UNKNOWN_ENUM_VARIANT } from "./common.js";
 
 const UNKNOWN_SCHEMA = z.string().transform((e) => e as UNKNOWN_ENUM_VARIANT);
 
-const Cat = z
+const PetBase = z
   .object({ type: z.string(), name: z.string().optional() })
-  .passthrough()
-  .merge(
-    z
-      .object({
-        type: z.string(),
-        name: z.string().optional(),
-        breed: z.enum(["CAT_A", "CAT_B"]).or(UNKNOWN_SCHEMA).optional(),
-      })
-      .passthrough()
-  );
+  .passthrough();
+const Cat = PetBase.merge(
+  z
+    .object({ breed: z.enum(["CAT_A", "CAT_B"]).or(UNKNOWN_SCHEMA) })
+    .partial()
+    .passthrough()
+);
 const DogEnum = z.enum(["DOG_A", "DOG_B"]).or(UNKNOWN_SCHEMA);
-const Dog = z
-  .object({ type: z.string(), name: z.string().optional() })
-  .passthrough()
-  .merge(
-    z
-      .object({
-        type: z.string(),
-        name: z.string().optional(),
-        fluffy: z.boolean().optional(),
-        breed: DogEnum.optional(),
-      })
-      .passthrough()
-  );
+const Dog = PetBase.merge(
+  z.object({ fluffy: z.boolean(), breed: DogEnum }).partial().passthrough()
+);
 const Pet = z.discriminatedUnion("type", [Cat, Dog]);
 export const schemas = {
+  PetBase,
   Cat,
   DogEnum,
   Dog,

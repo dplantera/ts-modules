@@ -23,6 +23,7 @@ components:
           CAT: '#/components/schemas/Cat'
 
     PetBase:
+      title: PetBase
       type: object
       required:
         - id
@@ -43,8 +44,8 @@ components:
       discriminator:
         propertyName: catType
         mapping:
-          SEAM: "#/Seam"
-          SHORT: "#/ShortHair"
+          SEAM: "#/components/schemas/Seam"
+          SHORT: "#/components/schemas/ShortHair"
 
     Dog:
       allOf:
@@ -57,14 +58,16 @@ components:
     Seam:
       allOf:
         - $ref: './cat_base.yml#/CatBase'
-        - properties:
+        - title: Seam
+          properties:
             catType: { type: string, default: "SEAM" }
             angryLevel: { type: string }
 
     ShortHair:
       allOf:
         - $ref: './cat_base.yml#/CatBase'
-        - properties:
+        - title: ShortHair
+          properties:
             catType: { type: string, default: "SHORT" }
             angryLevel: { type: string }
 
