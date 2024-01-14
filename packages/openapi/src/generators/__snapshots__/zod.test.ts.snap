@@ -1,0 +1,3 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Generator: zod generate 1`] = `"B:\\dev\\js\\ts-modules-remote\\packages\\openapi\\out\\zod.ts"`;

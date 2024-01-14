@@ -1,8 +1,7 @@
 import { bundle, createConfig } from "@redocly/openapi-core";
 import * as path from "path";
-import { Folder } from "./folder.js";
 import { oas30 } from "openapi3-ts";
-import _ from "lodash";
+import { _, Folder } from "@dsp/node-sdk";
 
 export interface OpenApiBundled extends oas30.OpenAPIObject {}
 

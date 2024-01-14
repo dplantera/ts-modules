@@ -1,5 +1,5 @@
 import { OpenApiBundled } from "../bundle.js";
-import { File } from "../folder.js";
+import { File } from "@dsp/node-sdk";
 import { generateZodClientFromOpenAPI } from "openapi-zod-client";
 import url from "url";
 

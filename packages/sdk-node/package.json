@@ -1,0 +1,19 @@
+{
+  "name": "@dsp/node-sdk",
+  "description": "Javascript runtime utilities including typescript types",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "lint": "echo not implemented",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "@dsp/ts-sdk": "*",
+    "@redocly/openapi-core": "^1.6.0"
+  },
+  "devDependencies": {
+    "tsconfig": "workspace:*"
+  }
+}

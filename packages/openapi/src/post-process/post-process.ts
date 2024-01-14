@@ -1,7 +1,6 @@
-import { Folder } from "../folder.js";
 import { Project, SourceFile, SyntaxKind } from "ts-morph";
 import path from "node:path";
-import _ from "lodash";
+import { _, Folder } from "@dsp/node-sdk";
 import { tsEnsureDiscriminatorValues } from "./ts-ensure-discriminator-values.js";
 import { zodReplaceAnd } from "./zod-replace-and.js";
 import { deleteUnwantedFiles } from "./delete-unwanted-files.js";

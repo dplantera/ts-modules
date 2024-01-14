@@ -2,7 +2,7 @@ import path from "path";
 import process from "process";
 import child_process from "node:child_process";
 import url from "url";
-import { Folder } from "../folder.js";
+import { Folder } from "@dsp/node-sdk";
 
 const dirname = url.fileURLToPath(new URL(".", import.meta.url));
 const TEMPLATE_DIR = "../../templates";

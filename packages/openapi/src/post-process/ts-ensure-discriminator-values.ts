@@ -1,4 +1,4 @@
-import _ from "lodash";
+import { _ } from "@dsp/node-sdk";
 import { SourceFile, StructureKind, SyntaxKind } from "ts-morph";
 
 export function tsEnsureDiscriminatorValues(api: SourceFile) {

@@ -3,7 +3,7 @@
 
 import { OpenApiBundled } from "../bundle.js";
 import { oas30 } from "openapi3-ts";
-import _ from "lodash";
+import { _ } from "@dsp/node-sdk";
 import { z, ZodString } from "zod";
 import pointer from "jsonpointer";
 import { TopologicalSort } from "topological-sort";

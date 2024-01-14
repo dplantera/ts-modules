@@ -1,0 +1,287 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`post process generated code ts types: post-process-B:\\dev\\js\\ts-modules-remote\\packages\\openapi\\tmp\\bundled-pets-api.yml 1`] = `
+"openapi: 3.0.3
+info:
+  title: My service
+  description: My service
+  version: 1.0.0
+servers:
+  - url: https://
+paths:
+  /v1/pets:
+    get:
+      summary: Get pets
+      operationId: getPets
+      responses:
+        '200':
+          description: Ok response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Pet'
+components:
+  schemas:
+    PetBase:
+      type: object
+      discriminator:
+        propertyName: type
+      required:
+        - type
+      properties:
+        type:
+          type: string
+        name:
+          type: string
+    DogEnum:
+      type: string
+      enum:
+        - DOG_A
+        - DOG_B
+    Dog:
+      allOf:
+        - type: object
+          discriminator:
+            propertyName: type
+          required:
+            - type
+          properties:
+            type:
+              type: string
+            name:
+              type: string
+        - type: object
+          discriminator:
+            propertyName: type
+          required:
+            - type
+          properties:
+            type:
+              type: string
+            name:
+              type: string
+            fluffy:
+              type: boolean
+            breed:
+              $ref: '#/components/schemas/DogEnum'
+    Cat:
+      allOf:
+        - type: object
+          discriminator:
+            propertyName: type
+          required:
+            - type
+          properties:
+            type:
+              type: string
+            name:
+              type: string
+        - type: object
+          discriminator:
+            propertyName: type
+          required:
+            - type
+          properties:
+            type:
+              type: string
+            name:
+              type: string
+            breed:
+              type: string
+              enum:
+                - CAT_A
+                - CAT_B
+    Pet:
+      oneOf:
+        - $ref: '#/components/schemas/Cat'
+        - $ref: '#/components/schemas/Dog'
+      discriminator:
+        propertyName: type
+        mapping:
+          DOG: '#/components/schemas/Dog'
+          CAT: '#/components/schemas/Cat'
+"
+`;
+
+exports[`post process spec merge all of 1`] = `
+{
+  "components": {
+    "schemas": {
+      "Cat": {
+        "allOf": [
+          {
+            "discriminator": {
+              "propertyName": "type",
+            },
+            "properties": {
+              "breed": {
+                "enum": [
+                  "CAT_A",
+                  "CAT_B",
+                ],
+                "type": "string",
+              },
+              "name": {
+                "type": "string",
+              },
+              "type": {
+                "type": "string",
+              },
+            },
+            "required": [
+              "type",
+            ],
+            "type": "object",
+          },
+          {
+            "discriminator": {
+              "propertyName": "type",
+            },
+            "properties": {
+              "breed": {
+                "enum": [
+                  "CAT_A",
+                  "CAT_B",
+                ],
+                "type": "string",
+              },
+              "name": {
+                "type": "string",
+              },
+              "type": {
+                "type": "string",
+              },
+            },
+            "required": [
+              "type",
+            ],
+            "type": "object",
+          },
+        ],
+      },
+      "Dog": {
+        "allOf": [
+          {
+            "discriminator": {
+              "propertyName": "type",
+            },
+            "properties": {
+              "breed": {
+                "$ref": "#/components/schemas/DogEnum",
+              },
+              "fluffy": {
+                "type": "boolean",
+              },
+              "name": {
+                "type": "string",
+              },
+              "type": {
+                "type": "string",
+              },
+            },
+            "required": [
+              "type",
+            ],
+            "type": "object",
+          },
+          {
+            "discriminator": {
+              "propertyName": "type",
+            },
+            "properties": {
+              "breed": {
+                "$ref": "#/components/schemas/DogEnum",
+              },
+              "fluffy": {
+                "type": "boolean",
+              },
+              "name": {
+                "type": "string",
+              },
+              "type": {
+                "type": "string",
+              },
+            },
+            "required": [
+              "type",
+            ],
+            "type": "object",
+          },
+        ],
+      },
+      "DogEnum": {
+        "enum": [
+          "DOG_A",
+          "DOG_B",
+        ],
+        "type": "string",
+      },
+      "Pet": {
+        "discriminator": {
+          "mapping": {
+            "CAT": "#/components/schemas/Cat",
+            "DOG": "#/components/schemas/Dog",
+          },
+          "propertyName": "type",
+        },
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/Cat",
+          },
+          {
+            "$ref": "#/components/schemas/Dog",
+          },
+        ],
+      },
+      "PetBase": {
+        "discriminator": {
+          "propertyName": "type",
+        },
+        "properties": {
+          "name": {
+            "type": "string",
+          },
+          "type": {
+            "type": "string",
+          },
+        },
+        "required": [
+          "type",
+        ],
+        "type": "object",
+      },
+    },
+  },
+  "info": {
+    "description": "My service",
+    "title": "My service",
+    "version": "1.0.0",
+  },
+  "openapi": "3.0.3",
+  "paths": {
+    "/v1/pets": {
+      "get": {
+        "operationId": "getPets",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Pet",
+                },
+              },
+            },
+            "description": "Ok response",
+          },
+        },
+        "summary": "Get pets",
+      },
+    },
+  },
+  "servers": [
+    {
+      "url": "https://",
+    },
+  ],
+}
+`;

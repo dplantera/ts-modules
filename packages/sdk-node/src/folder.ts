@@ -1,9 +1,9 @@
 /* eslint-disable no-inner-declarations */
-import path from "path";
-import process from "process";
-import fs from "fs";
+import path from "node:path";
+import process from "node:process";
+import fs from "node:fs";
 import { stringifyYaml } from "@redocly/openapi-core";
-import _ from "lodash";
+import { _ } from "@dsp/ts-sdk";
 
 // todo: move to node core
 export module File {
@@ -88,11 +88,21 @@ export module Folder {
           .forEach((f) => this.deleteFileOrDirectory(f));
         return this;
       },
+      readAllFilesAsString(): Array<{ src: string; content: string }> {
+        return fs
+          .readdirSync(_folder)
+          .map(this.makeFilePath.bind(this))
+          .filter(isFile)
+          .map((f: string) => ({
+            src: f,
+            content: fs.readFileSync(f, "utf-8"),
+          }));
+      },
       deleteFileOrDirectory(file: string) {
         if (!fs.existsSync(file)) {
           return this;
         }
-        if (fs.lstatSync(file).isDirectory()) {
+        if (isDir(file)) {
           fs.rmSync(file, { recursive: true });
           return this;
         }
@@ -108,13 +118,19 @@ export module Folder {
     };
   }
 
-  export function parsePath(absPath: string) {
+  export function isDir(path: string): boolean {
+    return fs.lstatSync(path).isDirectory();
+  }
+
+  export function isFile(path: string): boolean {
+    return fs.lstatSync(path).isFile();
+  }
+
+  export function parsePath(absPath: string): string {
     if (!fs.existsSync(absPath)) {
       // this is not fail save but the best we can do atm to ensure folder
       return File.isFilePath(absPath) ? path.dirname(absPath) : absPath;
     }
-    return fs.lstatSync(absPath).isDirectory()
-      ? absPath
-      : path.dirname(absPath);
+    return isDir(absPath) ? absPath : path.dirname(absPath);
   }
 }
