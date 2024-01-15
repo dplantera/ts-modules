@@ -10,9 +10,6 @@ const TEMPLATE_DIR = "../../templates";
 export function generateTypescriptAxios(openapiSpec: string, out: string) {
   const outDir = path.isAbsolute(out) ? out : path.resolve(process.cwd(), out);
   const templateDirPath = Folder.resolve(dirname, TEMPLATE_DIR).absolutePath;
-
-  child_process.execSync(
-    `openapi-generator-cli generate -g typescript-axios -i "${openapiSpec}" -o "${outDir}" -t "${templateDirPath}"`
-  );
+  child_process.execSync(`openapi-generator-cli generate -g typescript-axios -i "${openapiSpec}" -o "${outDir}" -t "${templateDirPath}"`);
   return outDir;
 }

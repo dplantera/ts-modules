@@ -7,6 +7,7 @@ export interface OpenApiBundled extends oas30.OpenAPIObject {}
 
 export async function bundleOpenapi(pathToApi: string, postProcessor?: (bundled: OpenApiBundled) => OpenApiBundled) {
   const bundleResults = await parseOpenapi(pathToApi);
+
   const apiName = path.basename(pathToApi);
   const parsed: OpenApiBundled = _.isNil(postProcessor) ? bundleResults.bundle.parsed : postProcessor(bundleResults.bundle.parsed);
   const cleanedParsed = _.isNil(postProcessor) ? parsed : (await doBundle(bundleResults.bundle.source, parsed)).bundle.parsed;

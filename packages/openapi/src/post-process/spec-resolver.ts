@@ -7,6 +7,16 @@ import { z } from "zod";
 import { TopologicalSort } from "topological-sort";
 import { _ } from "@dsp/node-sdk";
 
+export function cleanObj<T extends Record<string, any>>(obj: T, except: Array<keyof T>) {
+  Object.getOwnPropertyNames(obj).forEach((prop) => {
+    if (except.includes(prop)) {
+      return;
+    }
+    delete obj[prop];
+  });
+  return obj;
+}
+
 export module SpecResolver {
   export type Node = oas30.SchemaObject | undefined | { [key: string]: Node };
   export type Context = {
@@ -18,10 +28,7 @@ export module SpecResolver {
   };
 
   export type CollectCondition = (schema: oas30.SchemaObject) => boolean;
-  export function findSchemaObjectsWith(
-    bundled: OpenApiBundled,
-    ...conditions: Array<CollectCondition>
-  ) {
+  export function findSchemaObjectsWith(bundled: OpenApiBundled, ...conditions: Array<CollectCondition>) {
     /* CONTEXT */
     const visited = new Map();
     const nodes = new Map();
@@ -64,17 +71,8 @@ export module SpecResolver {
     };
   }
 
-  function collectDFS(
-    node: Node,
-    parent: Node | undefined,
-    visitors: Array<CollectCondition>,
-    ctx: Context
-  ) {
-    if (
-      _.isEmpty(node) ||
-      typeof node !== "object" ||
-      ctx.visited.has(toNodeId(ctx.path.current))
-    ) {
+  function collectDFS(node: Node, parent: Node | undefined, visitors: Array<CollectCondition>, ctx: Context) {
+    if (_.isEmpty(node) || typeof node !== "object" || ctx.visited.has(toNodeId(ctx.path.current))) {
       // leaf
       ctx.path.all.push(_.cloneDeep(ctx.path.current));
       return ctx;
@@ -121,11 +119,7 @@ export module SpecResolver {
     return path.join("::");
   }
 
-  export function resolveRefNode(
-    data: { $ref: string } | unknown,
-    ctx: Context,
-    params?: { deleteRef: boolean }
-  ) {
+  export function resolveRefNode(data: { $ref: string } | unknown, ctx: Context, params?: { deleteRef: boolean }) {
     if (!isRef(data)) {
       return {
         pointer: undefined,
@@ -142,9 +136,7 @@ export module SpecResolver {
     data: { $ref: string } | unknown,
     ctx: Context,
     params?: { deleteRef: boolean }
-  ): typeof params extends { deletedRef: true }
-    ? oas30.SchemaObject
-    : oas30.SchemaObject & { $ref?: string } {
+  ): typeof params extends { deletedRef: true } ? oas30.SchemaObject : oas30.SchemaObject & { $ref?: string } {
     if (!isRef(data)) {
       return data as oas30.SchemaObject;
     }
@@ -156,25 +148,13 @@ export module SpecResolver {
       }
       return pointer.get(ctx.root, propPath);
     } catch {
-      throw `Error: could not resolve ref ${ref} in: ${ctx.path.current.join(
-        "/"
-      )}`;
+      throw `Error: could not resolve ref ${ref} in: ${ctx.path.current.join("/")}`;
     }
   }
 
   const SchemaObject = z.object({
     discriminator: z.record(z.any()).optional(),
-    type: z
-      .enum([
-        "integer",
-        "number",
-        "string",
-        "boolean",
-        "object",
-        "null",
-        "array",
-      ])
-      .optional(),
+    type: z.enum(["integer", "number", "string", "boolean", "object", "null", "array"]).optional(),
     allOf: z.array(z.any()).optional(),
     oneOf: z.array(z.any()).optional(),
     anyOf: z.array(z.any()).optional(),

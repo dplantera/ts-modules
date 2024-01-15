@@ -5,6 +5,5 @@ info:
 paths:
   /pets:
     $ref: './route-pets.yml'
-components:
 
 

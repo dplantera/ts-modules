@@ -16,8 +16,8 @@ components:
       discriminator:
         propertyName: type
         mapping:
-          DOG: '#/components/schemas'
-          CAT: '#/components/schemas/Dog'
+          DOG: '#/components/schemas/Dog'
+          CAT: '#/components/schemas/Cat'
 
     PetBase:
       type: object

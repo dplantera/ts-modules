@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`generate openapi integration: generate-openapi-B:\\dev\\js\\ts-modules-remote\\packages\\openapi\\test\\out\\api.ts 1`] = `
+exports[`ggenerate openapi integration: generate-openapi-B:\\dev\\js\\ts-modules-remote\\packages\\openapi\\test\\out\\api.ts 1`] = `
 "/* tslint:disable */
 /* eslint-disable */
 /**
@@ -40,6 +40,11 @@ export interface Cat extends PetBase {
      * @memberof Cat
      */
     breed?: CatBreedEnum;
+    /**
+     * 
+     * @type {string}
+     * @memberof Cat
+     */
     type: 'CAT';
 }
 
@@ -70,6 +75,11 @@ export interface Dog extends PetBase {
      * @memberof Dog
      */
     breed?: DogEnum;
+    /**
+     * 
+     * @type {string}
+     * @memberof Dog
+     */
     type: 'DOG';
 }
 
@@ -229,7 +239,7 @@ export class DefaultApi extends BaseAPI {
 "
 `;
 
-exports[`generate openapi integration: generate-openapi-B:\\dev\\js\\ts-modules-remote\\packages\\openapi\\test\\out\\base.ts 1`] = `
+exports[`ggenerate openapi integration: generate-openapi-B:\\dev\\js\\ts-modules-remote\\packages\\openapi\\test\\out\\base.ts 1`] = `
 "/* tslint:disable */
 /* eslint-disable */
 /**
@@ -319,7 +329,7 @@ export const operationServerMap: ServerMap = {
 "
 `;
 
-exports[`generate openapi integration: generate-openapi-B:\\dev\\js\\ts-modules-remote\\packages\\openapi\\test\\out\\common.ts 1`] = `
+exports[`ggenerate openapi integration: generate-openapi-B:\\dev\\js\\ts-modules-remote\\packages\\openapi\\test\\out\\common.ts 1`] = `
 "/* tslint:disable */
 /* eslint-disable */
 /**
@@ -476,7 +486,7 @@ declare const tag: unique symbol;
 export type UNKNOWN_ENUM_VARIANT = string & {readonly [tag]: "UNKNOWN";};"
 `;
 
-exports[`generate openapi integration: generate-openapi-B:\\dev\\js\\ts-modules-remote\\packages\\openapi\\test\\out\\configuration.ts 1`] = `
+exports[`ggenerate openapi integration: generate-openapi-B:\\dev\\js\\ts-modules-remote\\packages\\openapi\\test\\out\\configuration.ts 1`] = `
 "/* tslint:disable */
 /* eslint-disable */
 /**
@@ -590,7 +600,7 @@ export class Configuration {
 "
 `;
 
-exports[`generate openapi integration: generate-openapi-B:\\dev\\js\\ts-modules-remote\\packages\\openapi\\test\\out\\index.ts 1`] = `
+exports[`ggenerate openapi integration: generate-openapi-B:\\dev\\js\\ts-modules-remote\\packages\\openapi\\test\\out\\index.ts 1`] = `
 "/* tslint:disable */
 /* eslint-disable */
 /**
@@ -612,7 +622,7 @@ export * from "./zod.js";
 "
 `;
 
-exports[`generate openapi integration: generate-openapi-B:\\dev\\js\\ts-modules-remote\\packages\\openapi\\test\\out\\zod.ts 1`] = `
+exports[`ggenerate openapi integration: generate-openapi-B:\\dev\\js\\ts-modules-remote\\packages\\openapi\\test\\out\\zod.ts 1`] = `
 "import { z } from "zod";
 import { UNKNOWN_ENUM_VARIANT } from "./common.js";
 
@@ -623,13 +633,18 @@ const PetBase = z
   .passthrough();
 const Cat = PetBase.merge(
   z
-    .object({ breed: z.enum(["CAT_A", "CAT_B"]).or(UNKNOWN_SCHEMA) })
-    .partial()
+    .object({ breed: z.enum(["CAT_A", "CAT_B"]).or(UNKNOWN_SCHEMA).optional(), type: z.string() })
     .passthrough()
 );
 const DogEnum = z.enum(["DOG_A", "DOG_B"]).or(UNKNOWN_SCHEMA);
 const Dog = PetBase.merge(
-  z.object({ fluffy: z.boolean(), breed: DogEnum }).partial().passthrough()
+  z
+    .object({
+      fluffy: z.boolean().optional(),
+      breed: DogEnum.optional(),
+      type: z.string(),
+    })
+    .passthrough()
 );
 const Pet = z.discriminatedUnion("type", [Cat, Dog]);
 export const schemas = {

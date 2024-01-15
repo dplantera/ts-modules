@@ -77,6 +77,12 @@ export interface Cat extends PetBase {
      * @memberof Cat
      */
     breed?: CatBreedEnum;
+    /**
+     * 
+     * @type {string}
+     * @memberof Cat
+     */
+    type: string;
 }
 
 
@@ -106,6 +112,12 @@ export interface Dog extends PetBase {
      * @memberof Dog
      */
     breed?: DogEnum;
+    /**
+     * 
+     * @type {string}
+     * @memberof Dog
+     */
+    type: string;
 }
 
 
@@ -719,13 +731,18 @@ const PetBase = z
   .passthrough();
 const Cat = PetBase.merge(
   z
-    .object({ breed: z.enum(["CAT_A", "CAT_B"]).or(UNKNOWN_SCHEMA) })
-    .partial()
+    .object({ breed: z.enum(["CAT_A", "CAT_B"]).or(UNKNOWN_SCHEMA).optional(), type: z.string() })
     .passthrough()
 );
 const DogEnum = z.enum(["DOG_A", "DOG_B"]).or(UNKNOWN_SCHEMA);
 const Dog = PetBase.merge(
-  z.object({ fluffy: z.boolean(), breed: DogEnum }).partial().passthrough()
+  z
+    .object({
+      fluffy: z.boolean().optional(),
+      breed: DogEnum.optional(),
+      type: z.string(),
+    })
+    .passthrough()
 );
 const Pet = z.discriminatedUnion("type", [Cat, Dog]);
 export const schemas = {

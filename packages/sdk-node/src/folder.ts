@@ -67,6 +67,16 @@ export module Folder {
         fs.writeFileSync(this.makeFilePath(fileName), File.stringify(content));
         return this;
       },
+      appendSync(
+        fileName: string,
+        content: string | object | NodeJS.ArrayBufferView
+      ) {
+        fs.appendFileSync(
+          this.makeFilePath(fileName),
+          JSON.stringify(content) + "\n"
+        );
+        return this;
+      },
       writeYml(
         fileName: string,
         content: string | object | NodeJS.ArrayBufferView

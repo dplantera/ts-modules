@@ -1,14 +1,15 @@
 import { Project, SourceFile, SyntaxKind } from "ts-morph";
 import path from "node:path";
 import { _, Folder } from "@dsp/node-sdk";
-import { tsEnsureDiscriminatorValues } from "./ts-ensure-discriminator-values.js";
-import { zodReplaceAnd } from "./zod-replace-and.js";
-import { deleteUnwantedFiles } from "./delete-unwanted-files.js";
+import { zodReplaceAnd } from "./zod/zod-replace-and.js";
+import { deleteUnwantedFiles, tsEnsureDiscriminatorValues } from "./ts/index.js";
 import { OpenApiBundled } from "../bundle.js";
-import { mergeAllOf } from "./merge-all-of.js";
+import { mergeAllOf } from "./spec/merge-all-of.js";
+import { ensureDiscriminatorValues } from "./spec/ensure-discriminator-values.js";
 
 export function postProcessSpec(bundled: OpenApiBundled) {
-  return mergeAllOf(bundled);
+  const ensuredDiscriminator = ensureDiscriminatorValues(bundled);
+  return mergeAllOf(ensuredDiscriminator);
 }
 
 /**
@@ -51,9 +52,7 @@ function zodEnsureUnknownEnumVariant(zodApi: SourceFile) {
 export function findEnums(api: SourceFile) {
   return api.getDescendantsOfKind(SyntaxKind.CallExpression).flatMap((n) => {
     // eslint-disable-next-line no-useless-escape
-    const isEnumExpression = /\.enum\s*\([\[\]\s\w,_\-"']+\)\s*$/u.test(
-      n.getText()
-    );
+    const isEnumExpression = /\.enum\s*\([\[\]\s\w,_\-"']+\)\s*$/u.test(n.getText());
     if (!isEnumExpression) {
       return [];
     }

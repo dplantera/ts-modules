@@ -1,14 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any,@typescript-eslint/no-unused-vars */
 // noinspection JSUnusedLocalSymbols
 
-import { OpenApiBundled } from "../bundle.js";
+import { OpenApiBundled } from "../../bundle.js";
 import { oas30 } from "openapi3-ts";
 import { _ } from "@dsp/node-sdk";
 // eslint-disable-next-line
 // @ts-ignore
 // noinspection TypeScriptCheckImport
-import mergeJsonSchemas from "merge-json-schemas";
-import { SpecResolver } from "./spec-resolver.js";
+import { cleanObj, SpecResolver } from "../spec-resolver.js";
 import jsonSchemaMergeAllOff from "json-schema-merge-allof";
 
 export function mergeAllOf(bundled: OpenApiBundled) {
@@ -94,14 +93,6 @@ function resolveSubSchemas(
   return [...flatten, ...subs].map((s) => ({ pointer: s.pointer, resolved: _.omit(s.resolved, "allOf") }));
 }
 
-function cleanObj<T extends Record<string, any>>(obj: T, except: Array<keyof T>) {
-  Object.getOwnPropertyNames(obj).forEach((prop) => {
-    if (except.includes(prop)) {
-      return;
-    }
-    delete obj[prop];
-  });
-}
 function getJsonSchemaMergeAllOff(subschemas: Array<{ pointer: string | undefined; resolved: oas30.SchemaObject }>) {
   return jsonSchemaMergeAllOff(
     { allOf: subschemas.map((s) => s.resolved) },
