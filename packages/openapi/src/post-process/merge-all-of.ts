@@ -102,23 +102,45 @@ function cleanObj<T extends Record<string, any>>(obj: T, except: Array<keyof T>)
     delete obj[prop];
   });
 }
+function getJsonSchemaMergeAllOff(subschemas: Array<{ pointer: string | undefined; resolved: oas30.SchemaObject }>) {
+  return jsonSchemaMergeAllOff(
+    { allOf: subschemas.map((s) => s.resolved) },
+    {
+      resolvers: {
+        // overwrite title by higher indexed schema: [ {title: a}, {title:b}] => {title:b}
+        title: ([a, b]) => b ?? a!,
+      },
+    }
+  );
+}
 
 function mergeSubSchemas(_resolvedSchemas: Array<{ pointer: string | undefined; resolved: oas30.SchemaObject }>, ctx: SpecResolver.Context) {
   const subschemas = _resolvedSchemas.map((d) => ({
     pointer: d.pointer,
     resolved: SpecResolver.resolveRef(d.resolved, ctx, { deleteRef: true }),
   }));
+
+  const merged = getJsonSchemaMergeAllOff(subschemas);
+  // clean references in properties
+  Object.values(merged.properties ?? {}).forEach((propValue) => {
+    if (_.isNil(propValue.$ref) || _.isEmpty(_.omit(propValue, "$ref"))) {
+      // property is either a ref or an object => that is fine
+      return;
+    }
+    // we have both a ref and an object. We try to keep the ref, if the content is identical
+    const schema = { pointer: undefined, resolved: _.cloneDeep(_.omit(propValue, "$ref")) };
+    const referenced = SpecResolver.resolveRefNode(propValue, ctx, { deleteRef: false });
+    if (_.isEqual(schema.resolved, referenced.resolved)) {
+      cleanObj(propValue, []);
+      Object.assign(propValue, { $ref: referenced.pointer });
+      return;
+    }
+    Object.assign(propValue, getJsonSchemaMergeAllOff([schema, referenced]));
+    delete propValue["$ref"];
+  });
   return {
     pointer: undefined,
-    resolved: jsonSchemaMergeAllOff(
-      { allOf: subschemas.map((s) => s.resolved) },
-      {
-        resolvers: {
-          // overwrite title by higher indexed schema: [ {title: a}, {title:b}] => {title:b}
-          title: ([a, b]) => b ?? a!,
-        },
-      }
-    ),
+    resolved: merged,
   };
 }
 

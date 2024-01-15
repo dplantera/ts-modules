@@ -11,6 +11,10 @@ export async function bundleOpenapi(pathToApi: string, postProcessor?: (bundled:
   const parsed: OpenApiBundled = _.isNil(postProcessor) ? bundleResults.bundle.parsed : postProcessor(bundleResults.bundle.parsed);
   const cleanedParsed = _.isNil(postProcessor) ? parsed : (await doBundle(bundleResults.bundle.source, parsed)).bundle.parsed;
 
+  // todo: investigate - for pets-simple it will duplicate schemas...
+  if (_.isDefined(parsed.components?.schemas?.["schemas"])) {
+    delete parsed.components.schemas["schemas"];
+  }
   return { parsed: cleanedParsed, outFile: Folder.temp().writeYml(`bundled-${apiName}`, cleanedParsed) };
 }
 
