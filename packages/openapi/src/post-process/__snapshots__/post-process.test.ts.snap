@@ -208,6 +208,9 @@ exports[`post process spec ensureDiscriminatorValues test/specs/generic/api.yml:
             "in": "path",
             "name": "petId",
             "required": true,
+            "schema": {
+              "type": "string",
+            },
           },
         ],
         "responses": {
@@ -442,6 +445,9 @@ exports[`post process spec ensureDiscriminatorValues test/specs/generic/api.yml:
             "in": "path",
             "name": "petId",
             "required": true,
+            "schema": {
+              "type": "string",
+            },
           },
         ],
         "responses": {
@@ -646,6 +652,9 @@ exports[`post process spec ensureDiscriminatorValues test/specs/generic/api.yml:
             "in": "path",
             "name": "petId",
             "required": true,
+            "schema": {
+              "type": "string",
+            },
           },
         ],
         "responses": {
@@ -869,6 +878,9 @@ exports[`post process spec ensureDiscriminatorValues test/specs/generic/api.yml:
             "in": "path",
             "name": "petId",
             "required": true,
+            "schema": {
+              "type": "string",
+            },
           },
         ],
         "responses": {
