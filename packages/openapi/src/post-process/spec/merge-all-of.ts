@@ -1,12 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any,@typescript-eslint/no-unused-vars */
-// noinspection JSUnusedLocalSymbols
 
 import { OpenApiBundled } from "../../bundle.js";
 import { oas30 } from "openapi3-ts";
 import { _ } from "@dsp/node-sdk";
-// eslint-disable-next-line
-// @ts-ignore
-// noinspection TypeScriptCheckImport
+
 import { cleanObj, SpecResolver } from "../spec-resolver.js";
 import jsonSchemaMergeAllOff from "json-schema-merge-allof";
 

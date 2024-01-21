@@ -8,6 +8,7 @@ export function zodReplaceAnd(zodApi: SourceFile) {
       id.replaceWithText("merge");
     });
   });
+  return zodApi;
 }
 
 export function findMergeSignatureWithAnd(api: SourceFile) {

@@ -1,1 +1,1 @@
-export { postProcessModels } from "./post-process.js";
+export { createZodPostProcessor, createTsPostProcessor, createSpecProcessor } from "./post-process.js";

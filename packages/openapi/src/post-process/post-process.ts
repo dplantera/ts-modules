@@ -1,61 +1,51 @@
-import { Project, SourceFile, SyntaxKind } from "ts-morph";
+import { Project, SourceFile } from "ts-morph";
 import path from "node:path";
-import { _, Folder } from "@dsp/node-sdk";
+import { _ } from "@dsp/node-sdk";
 import { zodReplaceAnd } from "./zod/zod-replace-and.js";
-import { deleteUnwantedFiles, tsEnsureDiscriminatorValues } from "./ts/index.js";
+import { tsEnsureDiscriminatorValues } from "./ts/ts-ensure-discriminator-values.js";
+import { deleteUnwantedFiles } from "./ts/delete-unwanted-files.js";
 import { OpenApiBundled } from "../bundle.js";
-import { mergeAllOf } from "./spec/merge-all-of.js";
 import { ensureDiscriminatorValues } from "./spec/ensure-discriminator-values.js";
+import { mergeAllOf } from "./spec/merge-all-of.js";
+import { zodEnsureUnknownEnumVariant } from "./zod/zod-ensure-unknown-enum.js";
 
-export function postProcessSpec(bundled: OpenApiBundled) {
-  const ensuredDiscriminator = ensureDiscriminatorValues(bundled);
-  return mergeAllOf(ensuredDiscriminator);
+export function createSpecProcessor(options: { mergeAllOf?: boolean; ensureDiscriminatorValues?: boolean }) {
+  const processors: Array<(spec: OpenApiBundled) => OpenApiBundled> = [];
+  if (options.mergeAllOf) processors.push(mergeAllOf);
+  if (options.ensureDiscriminatorValues) processors.push(ensureDiscriminatorValues);
+  return (spec: OpenApiBundled) => processors.reduce((acc, curr) => curr(acc), spec);
 }
 
-/**
- * Processes resulting models
- * @param outDir File containing all ts interfaces
- */
-export function postProcessModels(outDir: string) {
-  const out = Folder.of(outDir);
-  const tsApiPath = out.makeFilePath("api.ts");
-  const zodSchemasPath = out.makeFilePath("zod.ts");
+export function createTsPostProcessor(options: { deleteUnwantedFiles?: boolean; ensureDiscriminatorValues?: boolean }) {
+  const processors: Array<(api: SourceFile) => SourceFile> = [];
+  if (options.ensureDiscriminatorValues) processors.push(tsEnsureDiscriminatorValues);
+  return (spec: string) => {
+    const { project, sourceFile } = createTsMorphSrcFile(spec);
+    processors.reduce((acc, curr) => curr(acc), sourceFile);
+    if (options.deleteUnwantedFiles) deleteUnwantedFiles(spec);
+    project.saveSync();
+    return spec;
+  };
+}
 
+export function createZodPostProcessor(options: { replaceAndWithMerge?: boolean; ensureUnknownEnumVariant?: boolean }) {
+  const processors: Array<(api: SourceFile) => SourceFile> = [];
+  if (options.replaceAndWithMerge) processors.push(zodReplaceAnd);
+  if (options.ensureUnknownEnumVariant) processors.push(zodEnsureUnknownEnumVariant);
+  return (spec: string) => {
+    const { project, sourceFile } = createTsMorphSrcFile(spec);
+    processors.reduce((acc, curr) => curr(acc), sourceFile);
+    project.saveSync();
+    return spec;
+  };
+}
+
+function createTsMorphSrcFile(tsFilePath: string) {
   const project = new Project();
-  project.addSourceFileAtPath(tsApiPath);
-  project.addSourceFileAtPath(zodSchemasPath);
-
-  const tsApi = project.getSourceFile(path.basename(tsApiPath));
-  if (_.isNil(tsApi)) {
-    throw `Error: Expected source file for provided path: srcFile: ${tsApiPath}, provided: ${outDir} `;
+  project.addSourceFileAtPath(tsFilePath);
+  const sourceFile = project.getSourceFile(path.basename(tsFilePath));
+  if (_.isNil(sourceFile)) {
+    throw `Error: Expected source file for provided path: srcFile: ${tsFilePath}`;
   }
-  tsEnsureDiscriminatorValues(tsApi);
-
-  const zodApi = project.getSourceFile(path.basename(zodSchemasPath));
-  if (_.isNil(zodApi)) {
-    throw `Error: Expected source file for provided path: srcFile: ${tsApiPath}, provided: ${outDir} `;
-  }
-  zodReplaceAnd(zodApi);
-  zodEnsureUnknownEnumVariant(zodApi);
-
-  project.saveSync();
-  deleteUnwantedFiles(tsApiPath);
-}
-
-function zodEnsureUnknownEnumVariant(zodApi: SourceFile) {
-  const enums = findEnums(zodApi);
-  enums.forEach((p) => {
-    p.replaceWithText(`${p.getText()}.or(UNKNOWN_SCHEMA)`);
-  });
-}
-
-export function findEnums(api: SourceFile) {
-  return api.getDescendantsOfKind(SyntaxKind.CallExpression).flatMap((n) => {
-    // eslint-disable-next-line no-useless-escape
-    const isEnumExpression = /\.enum\s*\([\[\]\s\w,_\-"']+\)\s*$/u.test(n.getText());
-    if (!isEnumExpression) {
-      return [];
-    }
-    return [n];
-  });
+  return { project, sourceFile: sourceFile };
 }

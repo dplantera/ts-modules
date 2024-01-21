@@ -8,6 +8,7 @@ export function tsEnsureDiscriminatorValues(api: SourceFile) {
   discriminatedUnions.forEach((findREsult, idx, array) => {
     recursivelyEnsureDiscriminatorValues(findREsult, interfaces, array);
   });
+  return api;
 }
 
 function recursivelyEnsureDiscriminatorValues(

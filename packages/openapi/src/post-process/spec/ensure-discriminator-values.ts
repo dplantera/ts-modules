@@ -1,5 +1,5 @@
 import { OpenApiBundled } from "../../bundle.js";
-import { cleanObj, SpecResolver } from "../spec-resolver.js";
+import { SpecResolver } from "../spec-resolver.js";
 import { _ } from "@dsp/node-sdk";
 import { oas30 } from "openapi3-ts";
 import { isRef } from "@redocly/openapi-core";

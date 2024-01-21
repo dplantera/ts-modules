@@ -6,7 +6,8 @@ import { stringifyYaml } from "@redocly/openapi-core";
 import { _ } from "@dsp/ts-sdk";
 
 export module File {
-  export function isFilePath(filePath: string) {
+  export function isFilePath(filePath: string | undefined): filePath is string {
+    if (_.isNil(filePath)) return false;
     return /\.\w+$/u.test(filePath);
   }
 
@@ -22,8 +23,21 @@ export module File {
     }
     const _folder = Folder.of(filePath);
     return {
+      get name() {
+        return fileName;
+      },
+      get folder() {
+        return Folder.of(_folder.absolutePath);
+      },
       siblingFile(nameWithExt: string) {
         return _folder.makeFilePath(nameWithExt);
+      },
+      writeYml(content: string | object | NodeJS.ArrayBufferView) {
+        fs.writeFileSync(
+          this.absolutPath,
+          stringifyYaml(content, { noRefs: true })
+        );
+        return filePath;
       },
       get absolutPath() {
         return _folder.makeFilePath(fileName);
@@ -81,15 +95,13 @@ export module Folder {
         fileName: string,
         content: string | object | NodeJS.ArrayBufferView
       ) {
-        const filePath = this.makeFilePath(fileName);
-        fs.writeFileSync(
-          this.makeFilePath(fileName),
-          stringifyYaml(content, { noRefs: true })
-        );
-        return filePath;
+        return File.of(this.makeFilePath(fileName)).writeYml(content);
       },
       makeFilePath(file: string) {
         return path.isAbsolute(file) ? file : path.resolve(_folder, file);
+      },
+      makeFile(file: string) {
+        return File.of(this.makeFilePath(file));
       },
       delete(...files: string[]) {
         files
