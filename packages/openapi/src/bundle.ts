@@ -4,8 +4,11 @@ import { oas30 } from "openapi3-ts";
 import { _, Folder } from "@dsp/node-sdk";
 
 export interface OpenApiBundled extends oas30.OpenAPIObject {}
-
-export async function bundleOpenapi(pathToApi: string, postProcessor?: (bundled: OpenApiBundled) => OpenApiBundled) {
+interface BundleOption {
+  postProcessor: (bundled: OpenApiBundled) => OpenApiBundled;
+}
+export async function bundleOpenapi(pathToApi: string, params?: Partial<BundleOption>) {
+  const { postProcessor } = params ?? {};
   const bundleResults = await parseOpenapi(pathToApi);
 
   const apiName = path.basename(pathToApi);

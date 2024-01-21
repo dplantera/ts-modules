@@ -8,6 +8,8 @@ components:
           - name: petId
             in: path
             required: true
+            schema:
+              type: string
         responses:
           '200':
             description: A paged array of pets

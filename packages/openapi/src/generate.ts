@@ -13,7 +13,7 @@ export async function generateOpenapi(inputFile: string | undefined, outputFile:
     const pathToApi = path.resolve(process.cwd(), spec);
 
     log.info("start bundle: ", pathToApi);
-    const { parsed, outFile: bundled } = await bundleOpenapi(pathToApi, postProcessSpec);
+    const { parsed, outFile: bundled } = await bundleOpenapi(pathToApi, { postProcessor: postProcessSpec });
 
     log.info(`start generate typescript-axios:`, bundled, output);
     const outDir = generateTypescriptAxios(bundled, output);

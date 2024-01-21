@@ -9,8 +9,7 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "moduleResolution": "nodenext",
-    "outDir": "lib"
+    "moduleResolution": "nodenext"
   },
   "exclude": ["node_modules", "dist"]
 }
