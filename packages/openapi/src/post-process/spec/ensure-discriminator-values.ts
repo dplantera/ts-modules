@@ -72,8 +72,19 @@ function deleteEnumFromDiscriminator(discriminatorProperty: oas30.SchemaObject) 
 function ensureDiscriminator(discriminatorProperty: oas30.SchemaObject, key: string) {
   const update = _.cloneDeep(discriminatorProperty);
   deleteEnumFromDiscriminator(update);
-  update["x-const"] = key;
-  update.example = key;
+  const prev = update["x-const"];
+  if (_.isEmpty(prev)) {
+    update["x-const"] = key;
+    update.example = key;
+  } else if (Array.isArray(prev)) {
+    if (!prev.includes(key)) {
+      prev.push(key);
+    }
+    update.example = update["default"] ?? prev[0];
+  } else if (prev !== key) {
+    update["x-const"] = [prev, key];
+    update.example = key;
+  }
   return update;
 }
 
@@ -107,7 +118,7 @@ function selectDiscriminatorProperty(
     return { src: "properties", property: selectProperty(subSchema) };
   }
   if (!_.isEmpty(subSchema.allOf)) {
-    return { src: "allOf", property: selectPropertyFrom(subSchema.allOf) };
+    return { src: "allOf", property: selectPropertyFrom(subSchema.allOf?.toReversed()) };
   }
   if (!_.isEmpty(subSchema.oneOf)) {
     return { src: "oneOf", property: selectPropertyFrom(subSchema.oneOf) };

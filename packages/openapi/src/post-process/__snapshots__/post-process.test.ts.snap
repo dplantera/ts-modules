@@ -69,11 +69,39 @@ exports[`post process spec ensureDiscriminatorValues test/specs/generic/api.yml:
           },
         ],
       },
+      "GenericPet": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PetBase",
+          },
+          {
+            "properties": {
+              "name": {
+                "type": "string",
+              },
+              "type": {
+                "example": "HAMSTER",
+                "type": "string",
+                "x-const": [
+                  "BIRD",
+                  "HAMSTER",
+                ],
+              },
+            },
+            "required": [
+              "type",
+            ],
+            "title": "GenericPet",
+          },
+        ],
+      },
       "Pet": {
         "discriminator": {
           "mapping": {
+            "BIRD": "#/components/schemas/GenericPet",
             "CAT": "#/components/schemas/Cat",
             "DOG": "#/components/schemas/Dog",
+            "HAMSTER": "#/components/schemas/GenericPet",
           },
           "propertyName": "type",
         },
@@ -83,6 +111,9 @@ exports[`post process spec ensureDiscriminatorValues test/specs/generic/api.yml:
           },
           {
             "$ref": "#/components/schemas/Dog",
+          },
+          {
+            "$ref": "#/components/schemas/GenericPet",
           },
         ],
       },
@@ -299,11 +330,39 @@ exports[`post process spec ensureDiscriminatorValues test/specs/generic/api.yml:
           },
         ],
       },
+      "GenericPet": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PetBase",
+          },
+          {
+            "properties": {
+              "name": {
+                "type": "string",
+              },
+              "type": {
+                "example": "BIRD",
+                "type": "string",
+                "x-const": [
+                  "BIRD",
+                  "HAMSTER",
+                ],
+              },
+            },
+            "required": [
+              "type",
+            ],
+            "title": "GenericPet",
+          },
+        ],
+      },
       "Pet": {
         "discriminator": {
           "mapping": {
+            "BIRD": "#/components/schemas/GenericPet",
             "CAT": "#/components/schemas/Cat",
             "DOG": "#/components/schemas/Dog",
+            "HAMSTER": "#/components/schemas/GenericPet",
           },
           "propertyName": "type",
         },
@@ -313,6 +372,9 @@ exports[`post process spec ensureDiscriminatorValues test/specs/generic/api.yml:
           },
           {
             "$ref": "#/components/schemas/Dog",
+          },
+          {
+            "$ref": "#/components/schemas/GenericPet",
           },
         ],
       },
@@ -536,11 +598,28 @@ exports[`post process spec ensureDiscriminatorValues test/specs/generic/api.yml:
           },
         ],
       },
+      "GenericPet": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PetBase",
+          },
+          {
+            "properties": {
+              "name": {
+                "type": "string",
+              },
+            },
+            "title": "GenericPet",
+          },
+        ],
+      },
       "Pet": {
         "discriminator": {
           "mapping": {
+            "BIRD": "#/components/schemas/GenericPet",
             "CAT": "#/components/schemas/Cat",
             "DOG": "#/components/schemas/Dog",
+            "HAMSTER": "#/components/schemas/GenericPet",
           },
           "propertyName": "type",
         },
@@ -550,6 +629,9 @@ exports[`post process spec ensureDiscriminatorValues test/specs/generic/api.yml:
           },
           {
             "$ref": "#/components/schemas/Dog",
+          },
+          {
+            "$ref": "#/components/schemas/GenericPet",
           },
         ],
       },
@@ -741,11 +823,28 @@ exports[`post process spec ensureDiscriminatorValues test/specs/generic/api.yml:
           },
         ],
       },
+      "GenericPet": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/PetBase",
+          },
+          {
+            "properties": {
+              "name": {
+                "type": "string",
+              },
+            },
+            "title": "GenericPet",
+          },
+        ],
+      },
       "Pet": {
         "discriminator": {
           "mapping": {
+            "BIRD": "#/components/schemas/GenericPet",
             "CAT": "#/components/schemas/Cat",
             "DOG": "#/components/schemas/Dog",
+            "HAMSTER": "#/components/schemas/GenericPet",
           },
           "propertyName": "type",
         },
@@ -755,6 +854,9 @@ exports[`post process spec ensureDiscriminatorValues test/specs/generic/api.yml:
           },
           {
             "$ref": "#/components/schemas/Dog",
+          },
+          {
+            "$ref": "#/components/schemas/GenericPet",
           },
         ],
       },

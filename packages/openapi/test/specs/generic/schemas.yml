@@ -16,11 +16,22 @@ components:
       oneOf:
         - $ref: '#/components/schemas/Cat'
         - $ref: '#/components/schemas/Dog'
+        - $ref: '#/components/schemas/GenericPet'
       discriminator:
         propertyName: type
         mapping:
           DOG: '#/components/schemas/Dog'
           CAT: '#/components/schemas/Cat'
+          BIRD: '#/components/schemas/GenericPet'
+          HAMSTER: '#/components/schemas/GenericPet'
+
+    GenericPet:
+      allOf:
+        - $ref: '#/components/schemas/PetBase'
+        - title: GenericPet
+          properties:
+            name:
+              type: string
 
     PetBase:
       title: PetBase

@@ -92,15 +92,36 @@ export interface Dog extends PetBase {
 }
     
         /**
+ * 
+ * @export
+ * @interface GenericPet
+ */
+export interface GenericPet extends PetBase {
+    /**
+     * 
+     * @type {string}
+     * @memberof GenericPet
+     */
+    name?: string;
+    /**
+     * 
+     * @type {string}
+     * @memberof GenericPet
+     */
+    type: 'BIRD' | 'HAMSTER';
+}
+    
+        /**
 * @type Pet
 * @export
 * @discriminatedUnion Pet
 * @discriminatorProperty type
-* @discriminatorValues CAT | DOG
-* @subTypes Cat | Dog
+* @discriminatorValues BIRD | CAT | DOG | HAMSTER
+* @subTypes GenericPet | Cat | Dog | GenericPet
 */
-export type Pet = { type: 'CAT' } & Cat | { type: 'DOG' } & Dog | { type: UNKNOWN_ENUM_VARIANT, [prop:string]:unknown};
+export type Pet = { type: 'BIRD' } & GenericPet | { type: 'CAT' } & Cat | { type: 'DOG' } & Dog | { type: 'HAMSTER' } & GenericPet | { type: UNKNOWN_ENUM_VARIANT, [prop:string]:unknown};
 
+        
         
         
     
@@ -594,15 +615,33 @@ components:
         mapping:
           SEAM: '#/components/schemas/Seam'
           SHORT: '#/components/schemas/ShortHair'
+    GenericPet:
+      allOf:
+        - $ref: '#/components/schemas/PetBase'
+        - title: GenericPet
+          properties:
+            name:
+              type: string
+            type:
+              type: string
+              x-const:
+                - BIRD
+                - HAMSTER
+              example: HAMSTER
+          required:
+            - type
     Pet:
       oneOf:
         - $ref: '#/components/schemas/Cat'
         - $ref: '#/components/schemas/Dog'
+        - $ref: '#/components/schemas/GenericPet'
       discriminator:
         propertyName: type
         mapping:
           DOG: '#/components/schemas/Dog'
           CAT: '#/components/schemas/Cat'
+          BIRD: '#/components/schemas/GenericPet'
+          HAMSTER: '#/components/schemas/GenericPet'
     Pets:
       type: array
       maxItems: 100
@@ -935,7 +974,10 @@ const Cat = z.discriminatedUnion("catType", [Seam, ShortHair]);
 const Dog = PetBase.merge(
   z.object({ bark: z.string(), type: z.string() }).passthrough()
 );
-const Pet = z.discriminatedUnion("type", [Cat, Dog]);
+const GenericPet = PetBase.merge(
+  z.object({ name: z.string().optional(), type: z.string() }).passthrough()
+);
+const Pet = z.discriminatedUnion("type", [Cat, Dog, GenericPet]);
 const Pets = z.array(Pet);
 
 export const schemas = {
@@ -944,6 +986,7 @@ export const schemas = {
   ShortHair,
   Cat,
   Dog,
+  GenericPet,
   Pet,
   Pets,
 };

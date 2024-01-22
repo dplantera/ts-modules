@@ -26,7 +26,7 @@ Standard tooling is incorporated but configured and modified to yield consistent
 
 - ✅ merge all of
 - ✅ ensure discriminator values
-- 🔲 support muli schema usage in discriminator mapping (1:n discriminator value to mapping)
+- ✅ support muli schema usage in discriminator mapping (1:n discriminator value to mapping)
 #### example
 | examples | src                                 | bundled                                     | post-processed                                       |
 |----------|-------------------------------------|---------------------------------------------|------------------------------------------------------|
