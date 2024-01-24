@@ -2,10 +2,10 @@
 /* eslint-disable */
 {{>licenseInfo}}
 
-import type { Configuration } from "./configuration";
-import type { RequestArgs } from "./base";
-import type { AxiosInstance, AxiosResponse } from 'axios';
-import { RequiredError } from "./base";
+import type {Configuration} from "./configuration";
+import type {RequestArgs} from "./base";
+import type {AxiosInstance, AxiosResponse} from 'axios';
+import {RequiredError} from "./base";
 
 
 /**
@@ -44,7 +44,7 @@ export const setApiKeyToObject = async function (object: any, keyParamName: stri
  */
 export const setBasicAuthToObject = function (object: any, configuration?: Configuration) {
     if (configuration && (configuration.username || configuration.password)) {
-        object["auth"] = { username: configuration.username, password: configuration.password };
+        object["auth"] = {username: configuration.username, password: configuration.password};
     }
 }
 
@@ -79,18 +79,15 @@ function setFlattenedQueryParams(urlSearchParams: URLSearchParams, parameter: an
     if (typeof parameter === "object") {
         if (Array.isArray(parameter)) {
             (parameter as any[]).forEach(item => setFlattenedQueryParams(urlSearchParams, item, key));
-        } 
-        else {
-            Object.keys(parameter).forEach(currentKey => 
+        } else {
+            Object.keys(parameter).forEach(currentKey =>
                 setFlattenedQueryParams(urlSearchParams, parameter[currentKey], `${key}${key !== '' ? '.' : ''}${currentKey}`)
             );
         }
-    } 
-    else {
+    } else {
         if (urlSearchParams.has(key)) {
             urlSearchParams.append(key, parameter);
-        } 
-        else {
+        } else {
             urlSearchParams.set(key, parameter);
         }
     }
@@ -140,4 +137,4 @@ export const createRequestFunction = function (axiosArgs: RequestArgs, globalAxi
 }
 
 declare const tag: unique symbol;
-export type UNKNOWN_ENUM_VARIANT = string & {readonly [tag]: "UNKNOWN";};
+export type UNKNOWN_ENUM_VARIANT = string & { readonly [tag]: "UNKNOWN"; };
