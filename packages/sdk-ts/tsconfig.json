@@ -5,5 +5,5 @@
     "esModuleInterop": true
   },
   "exclude": ["node_modules", "dist"],
-  "include": ["index.ts"]
+  "include": ["index.ts", "src"]
 }

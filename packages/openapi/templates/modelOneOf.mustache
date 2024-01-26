@@ -22,12 +22,12 @@ export module {{classname}} {
     type Handler<I, R> = (e: I) => R;
     type MatchObj<T extends {{classname}}, R> = {
         [K in T as K['{{discriminator.propertyName}}']]: Handler<Extract<T, { type: K['{{discriminator.propertyName}}'] }>, R>
-    };
+    } & { onDefault: Handler<unknown, R> };
 
     /** All handler must return the same type*/
     export function match<R>(
         union: {{classname}},
-        handler: MatchObj<{{classname}}, R> & { onDefault: Handler<unknown, R> }
+        handler: MatchObj<{{classname}}, R>
     ): R {
         if (union.{{discriminator.propertyName}} in handler) {
             return handler[union.{{discriminator.propertyName}}](union as never);
@@ -38,7 +38,7 @@ export module {{classname}} {
     /** All handler must return the same type*/
     export function matchPartial<R>(
         union: {{classname}},
-        handler: Partial<MatchObj<{{classname}}, R> & { onDefault: Handler<unknown, R> }>
+        handler: Partial<MatchObj<{{classname}}, R>>
     ): R | undefined {
         if (union.{{discriminator.propertyName}} in handler) {
             return handler[union.{{discriminator.propertyName}}]?.(union as never);

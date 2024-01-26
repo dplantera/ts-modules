@@ -2,6 +2,7 @@
 // noinspection ES6UnusedImports,JSUnusedLocalSymbols
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import lodash from "lodash";
+
 declare module "lodash" {
   interface LoDashStatic {
     isDefined<T>(input: T): input is NonNullable<T>;

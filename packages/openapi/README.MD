@@ -44,7 +44,7 @@ Standard tooling is incorporated but configured and modified to yield consistent
     - ✅ recursively ensured discriminator values for nested union types
     - ✅ typescript compatible **unknown enum variant** which can be used in exhaustive switch cases
     - ✅ cleaned generator output
-    - ⬜ switch utility for every union like type
+    - ✅ match (switch alternative) utility for every union like type
 - example
     ````typescript
     export type UNKNOWN_ENUM_VARIANT = string & { readonly [tag]: "UNKNOWN"; };
@@ -70,8 +70,24 @@ Standard tooling is incorporated but configured and modified to yield consistent
     type Pet = | { type: 'CAT' } & Cat 
                | { type: 'DOG' } & Dog 
                | { type: UNKNOWN_ENUM_VARIANT, [prop: string]: unknown }
-    
-    /** some example usage*/
+  
+  /** Utilities to work with the discriminated union Pet (will be generated for every discriminated or simple union) */  
+  export module Pet {
+        type Handler<I, R> = (e: I) => R;
+        type MatchObj<T extends Pet, R> = { [K in T as K["type"]]: Handler<Extract<T, { type: K["type"] }>, R> } & { onDefault: Handler<unknown, R> };
+        
+        /** All handler must return the same type*/
+        export function match<R>(union: Pet, handler: MatchObj<Pet, R>): R {
+            return union.type in handler ? handler[union.type](union as never) : handler.onDefault(union);
+        }
+        
+        /** All handler must return the same type*/
+        export function matchPartial<R>(union: Pet, handler: Partial<MatchObj<Pet, R>>): R | undefined {
+            return union.type in handler ? handler[union.type]?.(union as never) : handler.onDefault?.(union);
+        }
+    }
+  
+    /* some example usage without utilities */
     function fooPet(pet: Pet): any {
         switch (pet.type) {
             case 'CAT':
@@ -81,9 +97,35 @@ Standard tooling is incorporated but configured and modified to yield consistent
             default:
                 // exhaustiveness check: will throw compiler error for new variats
                 const unknownVariant: UNKNOWN_ENUM_VARIANT = pet;
-                logger.error(`can't explicitly handle variant '${unknownVariant.type}' at the moment`);
+                logger.warning(`can't explicitly handle variant '${unknownVariant.type}' at the moment`);
                 return applyDefaultOrThrow();
         }
+    }
+  
+    /* some example usage with utilities, note that the discriminator handling is handled by the generator */
+    function fooPet(pet: Pet): any {
+       return Pet.match(pet, {
+           'CAT': doSomethingWithCat,
+           'DOG': doSomethingWithDog,
+           onDefault: () => {
+               logger.warning(`can't explicitly handle variant '${unknownVariant.type}' at the moment`);
+               return applyDefaultOrThrow();
+           }
+        })
+    }
+  
+    /* some example usage with utilities, note that the handler arguments are type safe*/
+    function fooPetNested(pet: Pet): any {
+        return Pet.match(pet, {
+            'CAT': (c) =>
+                  Cat.match(c, {
+                    'SEAM': () => 1.1,
+                    'SHORT': () => 1.2,
+                    onDefault: () => 1.3,
+                  }),
+            'DOG': (d) => 2,
+            onDefault: (unknown) => 3,
+        });
     }
     ````
 
