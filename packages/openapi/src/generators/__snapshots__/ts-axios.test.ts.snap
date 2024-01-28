@@ -95,9 +95,9 @@ export module CatBreedEnums {
     type Handler<I, R> = (e: I) => R;
     type MatchObj<T extends CatBreedEnum, R> = {
         [K in T as K]: Handler<Extract<T, K>, R>;
-    };
+    }  & { onDefault: Handler<unknown, R> };
     /** All handler must return the same type*/
-    export function match<R>(enumValue: CatBreedEnum, handler: MatchObj<CatBreedEnum, R> & { onDefault: Handler<unknown, R> }): R {
+    export function match<R>(enumValue: CatBreedEnum, handler: MatchObj<CatBreedEnum, R>): R {
         if (enumValue in handler) {
             return handler[enumValue](enumValue as never);
         }
@@ -105,7 +105,7 @@ export module CatBreedEnums {
     }
 
     /** All handler must return the same type*/
-    export function matchPartial<R>(enumValue: CatBreedEnum, handler: Partial<MatchObj<CatBreedEnum, R> & { onDefault: Handler<unknown, R> }>): R | undefined {
+    export function matchPartial<R>(enumValue: CatBreedEnum, handler: Partial<MatchObj<CatBreedEnum, R> >): R | undefined {
         if (enumValue in handler) {
             return handler[enumValue]?.(enumValue as never);
         }
@@ -172,12 +172,12 @@ export module Pet {
     type Handler<I, R> = (e: I) => R;
     type MatchObj<T extends Pet, R> = {
         [K in T as K['type']]: Handler<Extract<T, { type: K['type'] }>, R>
-    };
+    } & { onDefault: Handler<unknown, R> };
 
     /** All handler must return the same type*/
     export function match<R>(
         union: Pet,
-        handler: MatchObj<Pet, R> & { onDefault: Handler<unknown, R> }
+        handler: MatchObj<Pet, R>
     ): R {
         if (union.type in handler) {
             return handler[union.type](union as never);
@@ -188,7 +188,7 @@ export module Pet {
     /** All handler must return the same type*/
     export function matchPartial<R>(
         union: Pet,
-        handler: Partial<MatchObj<Pet, R> & { onDefault: Handler<unknown, R> }>
+        handler: Partial<MatchObj<Pet, R>>
     ): R | undefined {
         if (union.type in handler) {
             return handler[union.type]?.(union as never);

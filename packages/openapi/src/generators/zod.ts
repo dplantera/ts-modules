@@ -13,7 +13,6 @@ const PATH_TEMPLATE = "../../templates/schemas-only.hbs";
  */
 export async function generateZodSchemas(openapiSpec: OpenApiBundled, outDir: string, params?: { postProcessor?: (api: string) => string }) {
   childLog(generateZodSchemas).info(`start generate: %s`, outDir);
-
   const outFilePath = File.of(outDir, "zod.ts").absolutPath;
   const templatePath = File.resolve(dirname, PATH_TEMPLATE).absolutPath;
   await generateZodClientFromOpenAPI({
@@ -21,6 +20,7 @@ export async function generateZodSchemas(openapiSpec: OpenApiBundled, outDir: st
     openApiDoc: openapiSpec,
     templatePath: templatePath,
   });
+
   if (_.isDefined(params?.postProcessor)) params.postProcessor(outFilePath);
   return outFilePath;
 }

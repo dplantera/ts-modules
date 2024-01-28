@@ -4,8 +4,9 @@ import { OpenApiBundled } from "../../bundle.js";
 import { oas30 } from "openapi3-ts";
 import { _ } from "@dsp/node-sdk";
 
-import { cleanObj, SpecResolver } from "../spec-resolver.js";
 import jsonSchemaMergeAllOff from "json-schema-merge-allof";
+import { cleanObj, DeepSchemaResolverContext, DeepSchemaResolver } from "../../transpiler/resolver-deep.js";
+import { isRef } from "@redocly/openapi-core";
 
 export function mergeAllOf(bundled: OpenApiBundled) {
   const mergedAllOf = _.cloneDeep(bundled);
@@ -14,7 +15,7 @@ export function mergeAllOf(bundled: OpenApiBundled) {
   return mergedAllOf;
 }
 
-function doMerge(schema: any, ctx: SpecResolver.Context) {
+function doMerge(schema: any, ctx: DeepSchemaResolverContext) {
   const subSchemas: Array<oas30.ReferenceObject | oas30.SchemaObject> = schema.allOf ?? [];
 
   const clonedSchemas = _.cloneDeep(subSchemas);
@@ -77,10 +78,10 @@ function doMerge(schema: any, ctx: SpecResolver.Context) {
 
 function resolveSubSchemas(
   subSchemas: Array<oas30.ReferenceObject | oas30.SchemaObject>,
-  ctx: SpecResolver.Context
+  ctx: DeepSchemaResolverContext
 ): Array<{ pointer: string | undefined; resolved: oas30.SchemaObject & { $ref?: string } }> {
   const subs = subSchemas.map((d) => {
-    return SpecResolver.resolveRefNode(d, ctx, { deleteRef: true });
+    return resolveRefNode(d, ctx, { deleteRef: true });
   });
   const allOfs = subs.flatMap((s) => s.resolved.allOf ?? []);
   if (_.isEmpty(allOfs)) {
@@ -102,10 +103,10 @@ function getJsonSchemaMergeAllOff(subschemas: Array<{ pointer: string | undefine
   );
 }
 
-function mergeSubSchemas(_resolvedSchemas: Array<{ pointer: string | undefined; resolved: oas30.SchemaObject }>, ctx: SpecResolver.Context) {
+function mergeSubSchemas(_resolvedSchemas: Array<{ pointer: string | undefined; resolved: oas30.SchemaObject }>, ctx: DeepSchemaResolverContext) {
   const subschemas = _resolvedSchemas.map((d) => ({
     pointer: d.pointer,
-    resolved: SpecResolver.resolveRef(d.resolved, ctx, { deleteRef: true }),
+    resolved: ctx.resolveRef(d.resolved, { deleteRef: true }),
   }));
 
   const merged = getJsonSchemaMergeAllOff(subschemas);
@@ -117,7 +118,7 @@ function mergeSubSchemas(_resolvedSchemas: Array<{ pointer: string | undefined; 
     }
     // we have both a ref and an object. We try to keep the ref, if the content is identical
     const schema = { pointer: undefined, resolved: _.cloneDeep(_.omit(propValue, "$ref")) };
-    const referenced = SpecResolver.resolveRefNode(propValue, ctx, { deleteRef: false });
+    const referenced = resolveRefNode(propValue, ctx, { deleteRef: false });
     if (_.isEqual(schema.resolved, referenced.resolved)) {
       cleanObj(propValue, []);
       Object.assign(propValue, { $ref: referenced.pointer });
@@ -133,5 +134,18 @@ function mergeSubSchemas(_resolvedSchemas: Array<{ pointer: string | undefined; 
 }
 
 function findSchemaObjectsWithAllOf(bundled: OpenApiBundled) {
-  return SpecResolver.findSchemaObjectsWith(bundled, (node) => _.isDefined(node.allOf));
+  return DeepSchemaResolver.findSchemaObjectsWith(bundled, (node) => _.isDefined(node.allOf));
+}
+
+function resolveRefNode(data: { $ref: string } | unknown, ctx: DeepSchemaResolverContext, params?: { deleteRef: boolean }) {
+  if (!isRef(data)) {
+    return {
+      pointer: undefined,
+      resolved: ctx.resolveRef(data as oas30.SchemaObject, params),
+    };
+  }
+  return {
+    pointer: data["$ref"],
+    resolved: ctx.resolveRef(data, params),
+  };
 }

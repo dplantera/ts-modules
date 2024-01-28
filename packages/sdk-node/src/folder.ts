@@ -59,6 +59,9 @@ export module Folder {
   export function temp() {
     return resolve(process.cwd(), "tmp");
   }
+  export function cwd(...segments: string[]) {
+    return of(path.resolve(process.cwd(), ...segments));
+  }
   export function resolve(...segments: string[]) {
     return of(path.resolve(...segments));
   }

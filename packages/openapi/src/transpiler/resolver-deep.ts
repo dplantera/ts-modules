@@ -1,11 +1,10 @@
 /* eslint-disable no-inner-declarations,@typescript-eslint/no-explicit-any */
 import { oas30 } from "openapi3-ts";
-import { OpenApiBundled } from "../bundle.js";
-import { isRef } from "@redocly/openapi-core";
-import pointer from "jsonpointer";
 import { z } from "zod";
 import { TopologicalSort } from "topological-sort";
 import { _ } from "@dsp/node-sdk";
+import { OpenApiBundled } from "../bundle.js";
+import { Resolver } from "./resolver.js";
 
 export function cleanObj<T extends Record<string, any>>(obj: T, except: Array<keyof T>) {
   Object.getOwnPropertyNames(obj).forEach((prop) => {
@@ -17,19 +16,18 @@ export function cleanObj<T extends Record<string, any>>(obj: T, except: Array<ke
   return obj;
 }
 
-export module SpecResolver {
-  export type Node = oas30.SchemaObject | undefined | { [key: string]: Node };
-  export type Context = {
-    root: OpenApiBundled;
-    visited: Map<string, Node>;
-    nodes: Map<Node, Node>;
-    edges: Map<Node, Array<Node>>;
-    path: { all: Array<Array<string>>; current: Array<string> };
-  };
+export type Node = oas30.SchemaObject | undefined | { [key: string]: Node };
 
-  export type CollectCondition = (schema: oas30.SchemaObject) => boolean;
-  export function findSchemaObjectsWith(bundled: OpenApiBundled, ...conditions: Array<CollectCondition>) {
-    /* CONTEXT */
+export interface DeepSchemaResolverContext extends Resolver {
+  root: OpenApiBundled;
+  visited: Map<string, Node>;
+  nodes: Map<Node, Node>;
+  edges: Map<Node, Array<Node>>;
+  path: { all: Array<Array<string>>; current: Array<string> };
+}
+
+export module DeepSchemaResolverContext {
+  export function create(bundled: OpenApiBundled): DeepSchemaResolverContext {
     const visited = new Map();
     const nodes = new Map();
     const edges = new Map();
@@ -37,16 +35,20 @@ export module SpecResolver {
       all: <Array<Array<string>>>[],
       current: <Array<string>>[],
     };
+    const resolver = Resolver.create(bundled);
+    return { ...resolver, visited, nodes, edges, path };
+  }
+}
 
+/** Deep resolving means we will traverse all field in the openapi documents in order to finde the possible schemas s*/
+export module DeepSchemaResolver {
+  export type CollectCondition = (schema: oas30.SchemaObject) => boolean;
+  export function findSchemaObjectsWith(bundled: OpenApiBundled, ...conditions: Array<CollectCondition>) {
+    /* CONTEXT */
+    const context = DeepSchemaResolverContext.create(bundled);
     /* COLLECT */
-    collectDFS(bundled, undefined, conditions, {
-      root: bundled,
-      visited,
-      nodes,
-      path,
-      edges,
-    });
-
+    collectDFS(bundled, undefined, conditions, context);
+    const { nodes, edges } = context;
     /* SORT by dependency */
     const sorted = topoSort(edges);
     const collected = [];
@@ -60,18 +62,12 @@ export module SpecResolver {
     collected.push(...nodes.keys());
 
     return {
-      collected,
-      ctx: {
-        root: bundled,
-        visited,
-        nodes,
-        path,
-        edges,
-      },
+      collected: collected.filter(_.isDefined),
+      ctx: context,
     };
   }
 
-  function collectDFS(node: Node, parent: Node | undefined, visitors: Array<CollectCondition>, ctx: Context) {
+  function collectDFS(node: Node, parent: Node | undefined, visitors: Array<CollectCondition>, ctx: DeepSchemaResolverContext) {
     if (_.isEmpty(node) || typeof node !== "object" || ctx.visited.has(toNodeId(ctx.path.current))) {
       // leaf
       ctx.path.all.push(_.cloneDeep(ctx.path.current));
@@ -95,7 +91,7 @@ export module SpecResolver {
     }
     const refObj = parseRefObj(node);
     if (refObj.success) {
-      const resolved = resolveRef(refObj.data, ctx);
+      const resolved = ctx.resolveRef(refObj.data);
       const children = ctx.edges.get(parent) ?? [];
       children.push(resolved);
       ctx.edges.set(parent, children);
@@ -119,39 +115,6 @@ export module SpecResolver {
     return path.join("::");
   }
 
-  export function resolveRefNode(data: { $ref: string } | unknown, ctx: Context, params?: { deleteRef: boolean }) {
-    if (!isRef(data)) {
-      return {
-        pointer: undefined,
-        resolved: resolveRef(data, ctx, params),
-      };
-    }
-    return {
-      pointer: data["$ref"],
-      resolved: resolveRef(data, ctx, params),
-    };
-  }
-
-  export function resolveRef(
-    data: { $ref: string } | unknown,
-    ctx: Context,
-    params?: { deleteRef: boolean }
-  ): typeof params extends { deletedRef: true } ? oas30.SchemaObject : oas30.SchemaObject & { $ref?: string } {
-    if (!isRef(data)) {
-      return data as oas30.SchemaObject;
-    }
-    const ref = data.$ref;
-    try {
-      const propPath = ref.replace("#/", "/");
-      if (params?.deleteRef ?? false) {
-        delete (data as any).$ref;
-      }
-      return pointer.get(ctx.root, propPath);
-    } catch {
-      throw `Error: could not resolve ref ${ref} in: ${ctx.path.current.join("/")}`;
-    }
-  }
-
   const SchemaObject = z.object({
     discriminator: z.record(z.any()).optional(),
     type: z.enum(["integer", "number", "string", "boolean", "object", "null", "array"]).optional(),
@@ -160,9 +123,10 @@ export module SpecResolver {
     anyOf: z.array(z.any()).optional(),
     items: z.record(z.any()).optional(),
     properties: z.record(z.any()).optional(),
+    additionalProperties: z.object({}).optional(),
   });
 
-  function isSchema(node: Node) {
+  export function isSchema(node: Node | unknown): node is oas30.SchemaObject {
     const parsed = SchemaObject.safeParse(node);
     return parsed.success && !_.isEmpty(parsed.data);
   }

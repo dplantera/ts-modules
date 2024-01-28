@@ -1,5 +1,6 @@
 module.exports = {
-    "env": {
+    parser: '@typescript-eslint/parser',
+    env: {
         "browser": true,
         "es2021": true,
     },
@@ -8,10 +9,12 @@ module.exports = {
         "plugin:@typescript-eslint/recommended",
     ],
     rules: {
+        "@typescript-eslint/switch-exhaustiveness-check": "error",
         "@typescript-eslint/no-namespace": "off"
     },
-    "parserOptions": {
+    parserOptions: {
         "ecmaVersion": "latest",
         "sourceType": "module",
+        project: "./tsconfig.json"
     },
 }

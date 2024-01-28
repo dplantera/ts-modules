@@ -3,6 +3,14 @@
   "main": "dist/index.js",
   "version": "0.0.0",
   "type": "module",
+  "author": "dsp",
+  "keywords": ["openapi", "typescript", "ts", "zod", "codegen"],
+  "repository": {
+    "type": "git",
+    "directory": "packages/openapi",
+    "url": "https://github.com/dplantera/ts-modules.git"
+  },
+  "description": "Collection of ready to use tools to facilitate OpenApi specification centered workflows.",
   "bin": {
     "openapicli": "dist/oa-cli.js",
     "oa-cli": "dist/oa-cli.js",
