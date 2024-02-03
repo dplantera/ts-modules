@@ -356,10 +356,16 @@ function fooPetNested(pet: Pet): any {
 
 #### zod
 
+- ✅ generate schemas
 - 🔲 generate 100 % compatible schemas with generated typescript types
+- 🔲 extended validation and parsing of data types and formats
+    - ✅ ensure primitive data types and basic set of formats
+    - 🔲 validate / ensure that a date format does not include time information
+    - 🔲 validate / ensure that a date-time format includes timezone information
+    - 🔲 support parsing bigint for string + int64 format
 - 🔲 support **unknown enum variant**
 - 🔲 support of nested (discriminated) unions
-- 🔲 support of circular (lacy) schemas
+- 🔲 support of circular (lazy) schemas
 
 [complex-petstore-src]: ./test/specs/pets-modular-complex/petstore-api.yml
 

@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export module ZodDiscriminatedUnions {
+export module ZodDiscriminatedUnion {
   export type Handler<I> = z.Schema<I>;
   export type MatchObj<T extends object, Discriminator extends keyof T> = Discriminator extends string
     ? {
@@ -8,11 +8,11 @@ export module ZodDiscriminatedUnions {
       } & { onDefault: Handler<{ [d in Discriminator]: string }> }
     : never;
 
-  export function of<T extends object>(discriminator: keyof T & string, matcher: ZodDiscriminatedUnions.MatchObj<T, typeof discriminator>): z.Schema<T> {
+  export function of<T extends object>(discriminator: keyof T & string, matcher: ZodDiscriminatedUnion.MatchObj<T, typeof discriminator>): z.Schema<T> {
     return z
       .custom<T>()
       .transform((val) => {
-        const result = ZodDiscriminatedUnions.matchSafe<T, typeof discriminator>(val, matcher, discriminator);
+        const result = ZodDiscriminatedUnion.matchSafe<T, typeof discriminator>(val, matcher, discriminator);
         return { result, val };
       })
       .superRefine((prev, ctx) => {

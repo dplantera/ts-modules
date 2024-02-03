@@ -42,6 +42,8 @@ components:
       properties:
         id:
           type: integer
+          minimum: 1
+          exclusiveMaximum: true
           format: int64
         type:
           type: string
@@ -71,8 +73,8 @@ components:
         - $ref: './cat_base.yml#/CatBase'
         - title: Seam
           properties:
-            catType: { type: string, default: "SEAM" }
-            angryLevel: { type: string }
+            catType: { type: string, default: "SEAM", maxLength: 3, minLength: 1 }
+            angryLevel: { type: string , pattern: '\w+'}
 
     ShortHair:
       allOf:

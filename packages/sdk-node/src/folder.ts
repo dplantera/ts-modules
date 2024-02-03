@@ -29,14 +29,21 @@ export module File {
       get folder() {
         return Folder.of(_folder.absolutePath);
       },
+      readAsString() {
+        return fs.readFileSync(this.absolutPath, "utf-8");
+      },
       siblingFile(nameWithExt: string) {
-        return _folder.makeFilePath(nameWithExt);
+        return of(_folder.makeFilePath(nameWithExt));
       },
       writeYml(content: string | object | NodeJS.ArrayBufferView) {
         fs.writeFileSync(
           this.absolutPath,
-          stringifyYaml(content, { noRefs: true })
+          stringifyYaml(content, { noRefs: true }),
         );
+        return filePath;
+      },
+      write(content: string | object | NodeJS.ArrayBufferView) {
+        fs.writeFileSync(this.absolutPath, content as never);
         return filePath;
       },
       get absolutPath() {
@@ -79,24 +86,24 @@ export module Folder {
       },
       write(
         fileName: string,
-        content: string | object | NodeJS.ArrayBufferView
+        content: string | object | NodeJS.ArrayBufferView,
       ) {
         fs.writeFileSync(this.makeFilePath(fileName), File.stringify(content));
         return this;
       },
       appendSync(
         fileName: string,
-        content: string | object | NodeJS.ArrayBufferView
+        content: string | object | NodeJS.ArrayBufferView,
       ) {
         fs.appendFileSync(
           this.makeFilePath(fileName),
-          JSON.stringify(content) + "\n"
+          JSON.stringify(content) + "\n",
         );
         return this;
       },
       writeYml(
         fileName: string,
-        content: string | object | NodeJS.ArrayBufferView
+        content: string | object | NodeJS.ArrayBufferView,
       ) {
         return File.of(this.makeFilePath(fileName)).writeYml(content);
       },

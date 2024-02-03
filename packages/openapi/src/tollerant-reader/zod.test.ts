@@ -2,7 +2,7 @@
 // noinspection JSUnusedLocalSymbols
 
 import { z } from "zod";
-import { ZodDiscriminatedUnions } from "../generators/zod/index.js";
+import { ZodDiscriminatedUnion } from "./discriminated-union.js";
 declare const tag: unique symbol;
 type UNKNOWN = string & { readonly [tag]: "UNKNOWN" };
 
@@ -17,12 +17,12 @@ test("zod discriminated union", () => {
     return handlerKey in matcher ? matcher[handlerKey].parse(union) : matcher.onDefault.parse(union);
   }
   type IUnion = { type: "A" } | { type: "B" } | { type: UNKNOWN };
-  const matcher: ZodDiscriminatedUnions.MatchObj<z.infer<typeof Union>, "type"> = { A, B, onDefault: Unknown };
-  const a: IUnion = ZodDiscriminatedUnions.match({ type: "B" } as z.infer<typeof Union>, matcher, "type");
-  expect(ZodDiscriminatedUnions.match({ type: "A" }, matcher, "type")).toEqual({ type: "A" });
-  expect(ZodDiscriminatedUnions.match({ type: "B" }, matcher, "type")).toEqual({ type: "B" });
-  expect(ZodDiscriminatedUnions.match({ type: "C" } as never, matcher, "type")).toEqual({ type: "C" });
-  expect(() => ZodDiscriminatedUnions.match({ type: 1 } as never, matcher, "type")).toThrow();
+  const matcher: ZodDiscriminatedUnion.MatchObj<z.infer<typeof Union>, "type"> = { A, B, onDefault: Unknown };
+  const a: IUnion = ZodDiscriminatedUnion.match({ type: "B" } as z.infer<typeof Union>, matcher, "type");
+  expect(ZodDiscriminatedUnion.match({ type: "A" }, matcher, "type")).toEqual({ type: "A" });
+  expect(ZodDiscriminatedUnion.match({ type: "B" }, matcher, "type")).toEqual({ type: "B" });
+  expect(ZodDiscriminatedUnion.match({ type: "C" } as never, matcher, "type")).toEqual({ type: "C" });
+  expect(() => ZodDiscriminatedUnion.match({ type: 1 } as never, matcher, "type")).toThrow();
 });
 test("union errors", () => {
   const A = z.object({ type: z.literal("A") });
@@ -32,7 +32,7 @@ test("union errors", () => {
   type Union = { type: "A" } | { type: "B" } | { type: UNKNOWN };
   const parent = z.object({
     a: z.string(),
-    b: ZodDiscriminatedUnions.of<Union>("type", { A, B, onDefault: Unknown }),
+    b: ZodDiscriminatedUnion.of<Union>("type", { A, B, onDefault: Unknown }),
   });
   const r = parent.safeParse({ a: "", b: { e: "A", c: 2 } });
   expect(r.success).toBe(false);

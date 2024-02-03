@@ -123,7 +123,9 @@ exports[`post process spec ensureDiscriminatorValues test/specs/generic/api.yml:
         },
         "properties": {
           "id": {
+            "exclusiveMaximum": true,
             "format": "int64",
+            "minimum": 1,
             "type": "integer",
           },
           "type": {
@@ -153,11 +155,14 @@ exports[`post process spec ensureDiscriminatorValues test/specs/generic/api.yml:
           {
             "properties": {
               "angryLevel": {
+                "pattern": "\\w+",
                 "type": "string",
               },
               "catType": {
                 "default": "SEAM",
                 "example": "SEAM",
+                "maxLength": 3,
+                "minLength": 1,
                 "type": "string",
                 "x-const": "SEAM",
               },
@@ -384,7 +389,9 @@ exports[`post process spec ensureDiscriminatorValues test/specs/generic/api.yml:
         },
         "properties": {
           "id": {
+            "exclusiveMaximum": true,
             "format": "int64",
+            "minimum": 1,
             "type": "integer",
           },
           "type": {
@@ -417,11 +424,14 @@ exports[`post process spec ensureDiscriminatorValues test/specs/generic/api.yml:
             },
             "properties": {
               "angryLevel": {
+                "pattern": "\\w+",
                 "type": "string",
               },
               "catType": {
                 "default": "SEAM",
                 "example": "SEAM",
+                "maxLength": 3,
+                "minLength": 1,
                 "type": "string",
                 "x-const": "SEAM",
               },
@@ -641,7 +651,9 @@ exports[`post process spec ensureDiscriminatorValues test/specs/generic/api.yml:
         },
         "properties": {
           "id": {
+            "exclusiveMaximum": true,
             "format": "int64",
+            "minimum": 1,
             "type": "integer",
           },
           "type": {
@@ -670,10 +682,13 @@ exports[`post process spec ensureDiscriminatorValues test/specs/generic/api.yml:
           {
             "properties": {
               "angryLevel": {
+                "pattern": "\\w+",
                 "type": "string",
               },
               "catType": {
                 "default": "SEAM",
+                "maxLength": 3,
+                "minLength": 1,
                 "type": "string",
               },
             },
@@ -866,7 +881,9 @@ exports[`post process spec ensureDiscriminatorValues test/specs/generic/api.yml:
         },
         "properties": {
           "id": {
+            "exclusiveMaximum": true,
             "format": "int64",
+            "minimum": 1,
             "type": "integer",
           },
           "type": {
@@ -898,6 +915,7 @@ exports[`post process spec ensureDiscriminatorValues test/specs/generic/api.yml:
             },
             "properties": {
               "angryLevel": {
+                "pattern": "\\w+",
                 "type": "string",
               },
               "catType": {
@@ -906,6 +924,8 @@ exports[`post process spec ensureDiscriminatorValues test/specs/generic/api.yml:
                   "SEAM",
                   "SHORT",
                 ],
+                "maxLength": 3,
+                "minLength": 1,
                 "title": "CatType",
                 "type": "string",
               },

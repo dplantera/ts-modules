@@ -4,9 +4,11 @@ import { ComponentNode, Schema } from "./transpile-schema.js";
 import { Endpoint } from "./transpile-endpoint.js";
 import { Resolver } from "./resolver.js";
 
-export interface TranspileContext extends Resolver {
+export interface TranspileContext {
+  resolver: Resolver;
   schemas: Map<ComponentNode, Schema>;
   endpoints: Array<Endpoint>;
+  clean(): TranspileContext;
 }
 
 /** Resolving the oa spec just involves parsing and traversing openapi specified elements and components */
@@ -14,7 +16,17 @@ export module TranspileContext {
   export function create(bundled: OpenApiBundled): TranspileContext {
     const resolver = Resolver.create(bundled);
     return {
-      ...resolver,
+      clean() {
+        if (this.schemas) {
+          this.schemas.forEach((s) => {
+            if ("::ref" in s.raw) {
+              delete s.raw["::ref"];
+            }
+          });
+        }
+        return this;
+      },
+      resolver,
       schemas: new Map(),
       endpoints: [],
     };

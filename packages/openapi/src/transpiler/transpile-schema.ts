@@ -1,6 +1,5 @@
 /* eslint-disable no-inner-declarations */
 import { oas30 } from "openapi3-ts";
-import { OpenApiBundled } from "../bundle.js";
 import { _ } from "@dsp/node-sdk";
 
 import { SetRequired } from "type-fest";
@@ -34,13 +33,15 @@ export module Schema {
   }
 
   interface Base {
+    required: boolean;
     type: oas30.SchemaObjectType;
     raw: oas30.SchemaObject;
     component: Inline | Component;
+
+    getName(): string;
   }
 
   interface PropertyBase extends Base {
-    required: boolean;
     type: Exclude<oas30.SchemaObjectType, "object" | "null">;
     format: SchemaObjectFormat | undefined;
   }
@@ -56,6 +57,7 @@ export module Schema {
   export interface Union extends Omit<Base, "type"> {
     raw: SetRequired<oas30.SchemaObject, "oneOf">;
     kind: "UNION";
+    discriminator?: { name: string };
     schemas: Array<Schema>;
   }
 
@@ -96,12 +98,26 @@ export module Schema {
     entityRef: Schema;
   }
 
+  function getComponentName(comp: Base["component"]) {
+    switch (comp.kind) {
+      case "INLINE":
+        return comp.name;
+      case "COMPONENT":
+        return comp.id.split("/").at(-1) ?? "UNKNOWN";
+    }
+  }
+
   export function union(raw: oas30.SchemaObject & Union["raw"], component: Component | Inline, schemas: Union["schemas"]): Union {
     return {
       kind: "UNION",
       schemas,
+      required: false,
+      discriminator: _.isDefined(raw.discriminator) ? { name: raw.discriminator.propertyName } : undefined,
       component,
       raw,
+      getName() {
+        return getComponentName(this.component);
+      },
     };
   }
 
@@ -115,64 +131,57 @@ export module Schema {
       type: raw.type !== "object" ? "object" : raw.type,
       properties: properties ?? [],
       kind: "OBJECT",
+      required: false,
       parent,
       component,
       raw,
+      getName() {
+        return getComponentName(this.component);
+      },
     };
   }
 
-  export function oaEnum(
-    raw: oas30.SchemaObject & OaEnum["raw"] & Pick<OaEnum, "type">,
-    component: Component | Inline,
-    values: OaEnum["enum"],
-    params?: {
-      required?: boolean;
-    }
-  ): OaEnum {
+  export function oaEnum(raw: oas30.SchemaObject & OaEnum["raw"] & Pick<OaEnum, "type">, component: Component | Inline, values: OaEnum["enum"]): OaEnum {
     return {
       type: raw.type,
       enum: values,
-      required: params?.required ?? false,
+      required: false,
       kind: "ENUM",
       format: raw.format,
       component,
       raw,
+      getName() {
+        return getComponentName(this.component);
+      },
     };
   }
 
-  export function primitive(
-    raw: oas30.SchemaObject & Pick<Primitive, "type">,
-    component: Component | Inline,
-    params?: {
-      required?: boolean;
-    }
-  ): Primitive {
+  export function primitive(raw: oas30.SchemaObject & Pick<Primitive, "type">, component: Component | Inline): Primitive {
     return {
       type: raw.type,
-      required: params?.required ?? false,
+      required: false,
       kind: "PRIMITIVE",
       format: raw.format,
       component,
       raw,
+      getName() {
+        return getComponentName(this.component);
+      },
     };
   }
 
-  export function oaArray(
-    raw: oas30.SchemaObject & OaArray["raw"] & Pick<OaArray, "type">,
-    component: Component | Inline,
-    items: Schema,
-    params?: {
-      required?: boolean;
-    }
-  ): OaArray {
+  export function oaArray(raw: oas30.SchemaObject & OaArray["raw"] & Pick<OaArray, "type">, component: Component | Inline, items: Schema): OaArray {
     return {
       type: raw.type,
-      required: params?.required ?? false,
+      required: false,
       kind: "ARRAY",
       items,
       format: raw.format,
       component,
       raw,
+      getName() {
+        return getComponentName(this.component);
+      },
     };
   }
 
@@ -224,15 +233,19 @@ export module Schema {
       case "UNION":
         return schema.schemas.forEach((s) => ensureDiscriminator(s, discriminatorValue, propertyName, unionSchema));
       case "OBJECT": {
+        const component = { kind: "INLINE", name: propertyName } as const;
         const discriminator: DiscriminatorProperty = {
           entityRef: unionSchema,
           kind: "DISCRIMINATOR",
-          component: { kind: "INLINE", name: propertyName },
+          component,
           raw: { type: "string" },
           type: "string",
           enum: [discriminatorValue],
           required: true,
           format: undefined,
+          getName() {
+            return getComponentName(this.component);
+          },
         };
         if (_.isNil(schema.properties)) {
           schema.properties = [discriminator];
@@ -268,7 +281,7 @@ export module Schema {
 
     if (isUnion(schema)) {
       // todo: implement discriminator
-      const schemas: Union["schemas"] = schema.oneOf.map((s, idx) => parseSchema(`${name}_sub_${idx}`, s, ctx));
+      const schemas: Union["schemas"] = schema.oneOf.map((s, idx) => transpile(`${name}_sub_${idx}`, s, ctx));
       const groupedSchemas = _.groupBy(schemas, (s) => (s.component.kind === "COMPONENT" ? s.component.id : s.component.name));
       const unionSchema = union(schema, component, schemas);
       Object.entries(schema.discriminator?.mapping ?? {}).forEach(([discriminatorValue, mapRef]) => {
@@ -288,7 +301,7 @@ export module Schema {
     }
 
     if (isOaArray(schema)) {
-      const itemSchema: OaArray["items"] = parseSchema(`${name}_item`, schema.items, ctx);
+      const itemSchema: OaArray["items"] = transpile(`${name}_item`, schema.items, ctx);
       return oaArray(schema, component, itemSchema);
     }
 
@@ -300,7 +313,7 @@ export module Schema {
         )}`
       );
       const allOfCleaned = schema.allOf.filter((e) => !_.isEmpty(e));
-      const subSchemas = allOfCleaned.map((s, idx) => parseSchema(`${name}_sub_${idx}`, s, ctx));
+      const subSchemas = allOfCleaned.map((s, idx) => transpile(`${name}_sub_${idx}`, s, ctx));
       // todo: this is an issue/workaround for the bundler... it created an allOf with an empty array element for generic api
       if (subSchemas.length === 1) {
         const subSchema = subSchemas[0];
@@ -323,14 +336,21 @@ export module Schema {
 
     if (isOaObject(schema)) {
       // todo: implement discriminator
-      const properties: OaObject["properties"] = Object.entries(schema.properties ?? {}).map(([name, schema]) => parseSchema(name, schema, ctx));
+      function isRequired(s: Schema) {
+        return schema.required?.includes(s.getName()) ?? false;
+      }
+      const properties: OaObject["properties"] = Object.entries(schema.properties ?? {}).map(([name, schema]) => {
+        const property = transpile(name, schema, ctx);
+        property.required = isRequired(property);
+        return property;
+      });
       return oaObject(schema, component, properties);
     }
     throw new Error(`could not transpile schema '${name}':  ${JSON.stringify(schema)}`);
   }
 
-  export function parseSchema(name: string, oa: oas30.SchemaObject | oas30.ReferenceObject, ctx: TranspileContext): Schema {
-    const schema = ctx.resolveRefOptional(oa);
+  export function transpile(name: string, oa: oas30.SchemaObject | oas30.ReferenceObject, ctx: TranspileContext): Schema {
+    const schema = ctx.resolver.resolveRefOptional(oa);
 
     if (ctx.schemas.has(schema)) {
       const cachedSchema = ctx.schemas.get(schema);
@@ -351,13 +371,11 @@ export module Schema {
   }
 
   export function transpileAll(ctx: TranspileContext) {
-    if (_.isNil(ctx.root.components?.schemas)) return;
-    const schemas = Object.entries(ctx.root.components.schemas).map(([name, schema]) => {
+    if (_.isNil(ctx.resolver.root.components?.schemas)) return;
+    return Object.entries(ctx.resolver.root.components.schemas).map(([name, schema]) => {
       // eslint-disable-next-line
       (schema as any)["::ref"] = `#/components/schemas/${name}`;
-      return parseSchema(name, schema, ctx);
+      return transpile(name, schema, ctx);
     });
-    console.log(schemas);
-    return schemas;
   }
 }

@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any,@typescript-eslint/no-unused-vars,no-inner-declarations,@typescript-eslint/ban-types */
 
 import { Union, DiscriminatedUnion } from "@dsp/node-sdk/index.js";
+import { z } from "zod";
 
 declare const tag: unique symbol;
 type UNKNOWN = string & { readonly [tag]: "UNKNOWN" };
@@ -99,7 +100,7 @@ describe("union", () => {
       { t: "A", e: 1 },
       { t: "B", e: 2 },
       { t: "C" as UNKNOWN, e: 0 },
-    ] satisfies Array<{ t: Union; e: number }>)("compiles", (test) => {
+    ] satisfies Array<{ t: Union; e: number }>)("matches $t to $e", (test) => {
       const a = Union.match(test.t, {
         A: () => 1,
         B: () => 2,

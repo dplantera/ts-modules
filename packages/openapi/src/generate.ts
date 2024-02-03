@@ -1,6 +1,6 @@
 import process from "process";
 import { bundleOpenapi } from "./bundle.js";
-import { createSpecProcessor, createTsPostProcessor, createZodPostProcessor } from "./post-process/index.js";
+import { createSpecProcessor, createTsPostProcessor } from "./post-process/index.js";
 import { generateTypescriptAxios, generateZodSchemas } from "./generators/index.js";
 import { File, Folder } from "@dsp/node-sdk";
 import { log } from "./logger.js";
@@ -14,11 +14,10 @@ export async function generateOpenapi(inputFile: string, outputFile: string, par
       postProcessor: createSpecProcessor({ mergeAllOf: true, ensureDiscriminatorValues: true }),
     });
     const outDir = generateTypescriptAxios(bundled, output, {
+      generateZod: true,
       postProcessor: createTsPostProcessor({ deleteUnwantedFiles: true, ensureDiscriminatorValues: true }),
     });
-    await generateZodSchemas(parsed, output, {
-      postProcessor: createZodPostProcessor({ replaceAndWithMerge: true, ensureUnknownEnumVariant: true }),
-    });
+    await generateZodSchemas(parsed, File.of(output, "zod.ts").absolutPath);
 
     // save spec where the code is generated
     Folder.of(outDir).writeYml(File.of(bundled).name, parsed);

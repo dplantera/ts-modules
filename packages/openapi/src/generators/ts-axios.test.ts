@@ -11,7 +11,7 @@ describe("Generator: ts-axios", () => {
         mergeAllOf: true,
       }),
     });
-    const outFolder = generateTypescriptAxios(bundled, "test/out");
+    const outFolder = generateTypescriptAxios(bundled, "test/out/ts");
     const files = Folder.of(outFolder).readAllFilesAsString();
     files.forEach((f) => expect(f.content).toMatchSnapshot(`generate-ts-${f.src}`));
   });

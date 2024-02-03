@@ -103,9 +103,18 @@ importers:
       '@redocly/openapi-core':
         specifier: ^1.6.0
         version: 1.6.0
+      '@ts-morph/common':
+        specifier: ^0.22.0
+        version: 0.22.0
+      camelcase:
+        specifier: ^8.0.0
+        version: 8.0.0
       commander:
         specifier: ^11.1.0
         version: 11.1.0
+      handlebars:
+        specifier: ^4.7.8
+        version: 4.7.8
       js-yaml:
         specifier: ^4.1.0
         version: 4.1.0
@@ -121,9 +130,18 @@ importers:
       openapi-zod-client:
         specifier: ^1.15.0
         version: 1.15.0(react@18.2.0)
+      pascal-case:
+        specifier: ^4.0.0
+        version: 4.0.0
+      prettier:
+        specifier: ^3.2.4
+        version: 3.2.4
       topological-sort:
         specifier: ^0.3.0
         version: 0.3.0
+      toposort:
+        specifier: ^2.0.2
+        version: 2.0.2
       ts-morph:
         specifier: ^21.0.1
         version: 21.0.1
@@ -137,6 +155,12 @@ importers:
       '@types/json-schema-merge-allof':
         specifier: ^0.6.5
         version: 0.6.5
+      '@types/pascal-case':
+        specifier: ^1.1.2
+        version: 1.1.2
+      '@types/prettier':
+        specifier: ^3.0.0
+        version: 3.0.0
       '@typescript-eslint/eslint-plugin':
         specifier: ^6.17.0
         version: 6.17.0(@typescript-eslint/parser@6.20.0)(eslint@8.55.0)(typescript@5.3.3)
@@ -1316,6 +1340,20 @@ packages:
     dependencies:
       undici-types: 5.26.5
 
+  /@types/pascal-case@1.1.2:
+    resolution: {integrity: sha512-3mcrPtqkUuYNNaltpNF8eIL1qDJhY/o8YP9jzyKMQyhweyEubTCb6WQH39Ng0vZqDjWx3c1YaWkMcGDO6c6t8A==}
+    deprecated: This is a stub types definition for pascal-case (https://github.com/blakeembrey/pascal-case). pascal-case provides its own type definitions, so you don't need @types/pascal-case installed!
+    dependencies:
+      pascal-case: 4.0.0
+    dev: true
+
+  /@types/prettier@3.0.0:
+    resolution: {integrity: sha512-mFMBfMOz8QxhYVbuINtswBp9VL2b4Y0QqYHwqLz3YbgtfAcat2Dl6Y1o4e22S/OVE6Ebl9m7wWiMT2lSbAs1wA==}
+    deprecated: This is a stub types definition. prettier provides its own type definitions, so you do not need this installed.
+    dependencies:
+      prettier: 3.2.4
+    dev: true
+
   /@types/semver@7.5.6:
     resolution: {integrity: sha512-dn1l8LaMea/IjDoHNd9J52uBbInB796CDffS6VdIxvqYCPSG0V0DzHp76GpaWnlhg88uYyPbXCDIowa86ybd5A==}
     dev: true
@@ -1943,6 +1981,11 @@ packages:
     resolution: {integrity: sha512-Gmy6FhYlCY7uOElZUSbxo2UCDH8owEk996gkbrpsgGtrJLM3J7jGxl9Ic7Qwwj4ivOE5AWZWRMecDdF7hqGjFA==}
     engines: {node: '>=10'}
     dev: true
+
+  /camelcase@8.0.0:
+    resolution: {integrity: sha512-8WB3Jcas3swSvjIeA2yvCJ+Miyz5l1ZmB6HFb9R1317dt9LCQoswg/BGrmAmkWVEszSrrg4RwmO46qIm2OEnSA==}
+    engines: {node: '>=16'}
+    dev: false
 
   /camelize@1.0.1:
     resolution: {integrity: sha512-dU+Tx2fsypxTgtLoE36npi3UqcjSSMNYfkqgmoEhtZrraP5VWq0K7FkWVTYa8eMPtnU/G2txVsfdCJTn9uzpuQ==}
@@ -4567,6 +4610,10 @@ packages:
     resolution: {integrity: sha512-1nh45deeb5olNY7eX82BkPO7SSxR5SSYJiPTrTdFUVYwAl8CKMA5N9PjTYkHiRjisVcxcQ1HXdLhx2qxxJzLNQ==}
     dev: true
 
+  /no-case@4.0.0:
+    resolution: {integrity: sha512-WmS3EUGw+vXHlTgiUPi3NzbZNwH6+uGX0QLGgqG+aFSJ5rkX/Ee0nuwHBJfZTfQwwR8lGO819NEIwQ7CGhkdEQ==}
+    deprecated: Use `change-case`
+
   /node-fetch-h2@2.3.0:
     resolution: {integrity: sha512-ofRW94Ab0T4AOh5Fk8t0h8OBWrmjb0SSB20xh1H8YnPV9EJ+f5AMoYSUQ2zgJ4Iq2HAK0I2l5/Nequ8YzFS3Hg==}
     engines: {node: 4.x || >=6.0.0}
@@ -4913,6 +4960,12 @@ packages:
       entities: 4.5.0
     dev: true
 
+  /pascal-case@4.0.0:
+    resolution: {integrity: sha512-DPrSBfN1ivlJ5WwTdcBfCfmOHZXjaeW+b8DMHXcUWiR8wmO92T6N8elBsJj/v3g+INObw8Zx/q6eFAjA1w071Q==}
+    deprecated: Use `change-case`
+    dependencies:
+      no-case: 4.0.0
+
   /pastable@2.2.1(react@18.2.0):
     resolution: {integrity: sha512-K4ClMxRKpgN4sXj6VIPPrvor/TMp2yPNCGtfhvV106C73SwefQ3FuegURsH7AQHpqu0WwbvKXRl1HQxF6qax9w==}
     engines: {node: '>=14.x'}
@@ -5056,6 +5109,11 @@ packages:
     engines: {node: '>=10.13.0'}
     hasBin: true
     dev: false
+
+  /prettier@3.2.4:
+    resolution: {integrity: sha512-FWu1oLHKCrtpO1ypU6J0SbK2d9Ckwysq6bHj/uaCP26DxrPpppCLQRGVuqAxSTvhF00AcvDRyYrLNW7ocBhFFQ==}
+    engines: {node: '>=14'}
+    hasBin: true
 
   /pretty-format@29.6.3:
     resolution: {integrity: sha512-ZsBgjVhFAj5KeK+nHfF1305/By3lechHQSMWCTl8iHSbfOm2TN5nHEtFc/+W7fAyUeCs2n5iow72gld4gW0xDw==}
@@ -5904,6 +5962,10 @@ packages:
   /topological-sort@0.3.0:
     resolution: {integrity: sha512-BmO2t72jjJ3B9PZC3LTHyojgNynOKEvWG4GiYqyfSMUjtO6+yZK0oozlMYVA+tC6YvS3NZh4OPx6QaolEYOg6A==}
     engines: {node: '>=8'}
+    dev: false
+
+  /toposort@2.0.2:
+    resolution: {integrity: sha512-0a5EOkAUp8D4moMi2W8ZF8jcga7BgZd91O/yabJCFY8az+XSzeGyTKs0Aoo897iV1Nj6guFq8orWDS96z91oGg==}
     dev: false
 
   /tough-cookie@4.1.3:

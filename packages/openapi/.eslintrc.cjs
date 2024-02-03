@@ -10,6 +10,7 @@ module.exports = {
     ],
     rules: {
         "@typescript-eslint/switch-exhaustiveness-check": "error",
+        "no-inner-declarations": "off",
         "@typescript-eslint/no-namespace": "off"
     },
     parserOptions: {

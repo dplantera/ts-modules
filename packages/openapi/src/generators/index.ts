@@ -1,2 +1,2 @@
-export * from "./zod.js";
+export * from "./zod/index.js";
 export * from "./ts-axios.js";
