@@ -221,7 +221,10 @@ module Factory {
     }
 
     export function createEnum(c: Schema.OaEnum, values: string[], options: GenCtx): string {
-        return `z.enum([${values.map(stringify).join(",")}])`;
+        function withUnknownVariant(value: string) {
+            return `${value}.or(z.string().brand("UNKNOWN"))`;
+        }
+        return withUnknownVariant(`z.enum([${values.map(stringify).join(",")}])`);
     }
 
     export function createArray(c: Schema.OaArray, item: string, options: GenCtx): string {

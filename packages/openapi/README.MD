@@ -364,7 +364,7 @@ function fooPetNested(pet: Pet): any {
     - 🔲 validate / ensure that a date-time format includes timezone information
     - 🔲 support parsing bigint for string + int64 format
 - ✅ support of nested (discriminated) unions
-- 🪅 support **unknown enum variant**
+- ✅ support **unknown enum variant**
 - 🔲 support of circular (lazy) schemas
 
 [complex-petstore-src]: ./test/specs/pets-modular-complex/petstore-api.yml

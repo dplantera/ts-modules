@@ -566,9 +566,14 @@ export const createRequestFunction = function (axiosArgs: RequestArgs, globalAxi
     };
 }
 
-declare const tag: unique symbol;
-export type UNKNOWN_ENUM_VARIANT = string & { readonly [tag]: "UNKNOWN"; };
 
+export declare const BRAND: unique symbol;
+export declare type BRAND<T extends string | number | symbol> = {
+    [BRAND]: {
+        [k in T]: true;
+    };
+};
+export type UNKNOWN_ENUM_VARIANT = string & BRAND<"UNKNOWN">;
 "
 `;
 
