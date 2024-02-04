@@ -53,8 +53,7 @@
     "pascal-case": "^4.0.0",
     "camelcase": "^8.0.0",
     "tslog": "^4.9.2",
-    "handlebars": "^4.7.8",
-    "prettier": "^3.2.4"
+    "handlebars": "^4.7.8"
   },
   "devDependencies": {
     "@types/prettier": "^3.0.0",

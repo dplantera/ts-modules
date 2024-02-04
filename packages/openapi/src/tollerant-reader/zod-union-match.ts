@@ -5,7 +5,9 @@ export module ZodUnionMatch {
   export type Matcher = Record<string, z.ZodSchema>;
 
   export type Schemas<T extends Matcher> = T[keyof T];
-  export type Discriminator<T extends Matcher> = keyof z.infer<T[keyof T]>;
+    export type Discriminator<T extends Matcher> = RecDiscriminator<Schemas<T>>;
+    export type RecDiscriminator<T extends z.ZodSchema> = T extends z.ZodUnion<infer Options> ? RecDiscriminator<Options[number]> : keyof z.infer<T>;
+
   export function matcher<T extends Matcher>(discriminator: Discriminator<T>, matcher: T): Schemas<T> {
     return z
       .custom<T>()
@@ -15,7 +17,7 @@ export module ZodUnionMatch {
       })
       .superRefine((prev, ctx) => {
         if (!prev.result.success) {
-          const discriminatorValue = prev.val?.[discriminator];
+          const discriminatorValue = prev.val?.[discriminator as keyof T];
           const discriminatorProp = JSON.stringify(discriminator);
           const discriminatorWithValue = `${discriminatorProp}: ${discriminatorValue}`;
           const expected =

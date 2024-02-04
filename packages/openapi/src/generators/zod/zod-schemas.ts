@@ -1,24 +1,25 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 // noinspection JSUnusedLocalSymbols
 
-import { OpenApiBundled } from "../../bundle.js";
-import { Transpiler } from "../../transpiler/index.js";
-import { Schema } from "../../transpiler/transpile-schema.js";
+import {OpenApiBundled} from "../../bundle.js";
+import {Transpiler} from "../../transpiler/index.js";
+import {Schema} from "../../transpiler/transpile-schema.js";
 import assert from "node:assert";
-import { Project, ScriptKind, ts } from "ts-morph";
+import {Project, ScriptKind, ts} from "ts-morph";
 import DiscriminatorProperty = Schema.DiscriminatorProperty;
-import { pascalCase } from "pascal-case";
+import {pascalCase} from "pascal-case";
 import * as camelcase from "camelcase";
-import { _, File, Folder } from "@dsp/node-sdk";
-import { log } from "../../logger.js";
+import {_, File, Folder} from "@dsp/node-sdk";
+import {log} from "../../logger.js";
 import Handlebars from "handlebars";
-import prettier, { type Options, resolveConfig } from "prettier";
-import parserTypescript from "prettier/parser-typescript";
+
 import url from "url";
 
 const dirname = url.fileURLToPath(new URL(".", import.meta.url));
 const TEMPLATE_DIR = "../../../templates";
-interface GenCtx {}
+
+interface GenCtx {
+}
 
 export async function generateZod(parsed: OpenApiBundled, filePath: string) {
     const transpiler = Transpiler.of(parsed);
@@ -26,10 +27,8 @@ export async function generateZod(parsed: OpenApiBundled, filePath: string) {
     const components = schemas.filter((s) => s.component.kind === "COMPONENT");
     // we want to generate all components
     const imports = ["import { z } from 'zod'", "import * as zc from './zod-common.js'"];
-    const schemaDeclarations = components.map((c) =>
-        createConstantDeclaration(c, { useBigIntForLongNumberInt64: true })
-    );
-    const typeDeclarations = components.map((c) => createTypeDeclaration(c, { useBigIntForLongNumberInt64: true }));
+    const schemaDeclarations = components.map((c) => createConstantDeclaration(c, {useBigIntForLongNumberInt64: true}));
+    const typeDeclarations = components.map((c) => createTypeDeclaration(c, {useBigIntForLongNumberInt64: true}));
     const schemaTypesModule = createModule("Types", typeDeclarations, {});
     schemaDeclarations.push(schemaTypesModule);
     const schemasModule = createModule("Schemas", schemaDeclarations, {});
@@ -44,17 +43,7 @@ export async function generateZod(parsed: OpenApiBundled, filePath: string) {
     File.of(filePath).siblingFile("zod-common.ts").write(result);
     return sourceSchema;
 }
-export async function maybePretty(input: string, options?: Options | null): Promise<string> {
-    try {
-        return prettier.format(input.trim(), {
-            parser: "typescript",
-            plugins: [parserTypescript],
-            ...options,
-        });
-    } catch {
-        return Promise.resolve(input); // assume it's invalid syntax and ignore
-    }
-}
+
 function createConstantDeclaration(c: Schema, options: GenCtx) {
     const declaration = `export const ${pascalCase(c.getName())}`;
     const value = processSchema(c, options);
@@ -88,8 +77,9 @@ function processSchema(c: Schema | DiscriminatorProperty, options: GenCtx): stri
     switch (c.kind) {
         case "UNION": {
             if (_.isDefined(c.discriminator)) {
-                const subSchemas = c.schemas.map((s) => processSubSchema(s, options));
-                return Factory.createDiscriminatedUnion(c, subSchemas, options);
+                // transform for zod schema factory
+                const mappings = c.discriminator.mappings.map((d) => ({discriminatorValue:  Factory.stringify(d.discriminatorValue), entityRef: Factory.createEntityRef(d, options)}))
+                return Factory.createDiscriminatedUnion(c.discriminator!.name, mappings, options);
             }
             const subSchemas = c.schemas.map((s) => processSubSchema(s, options));
             return Factory.createUnion(c, subSchemas, options);
@@ -133,7 +123,7 @@ function createTsMorphSrcFile(tsFilePath: string, source: string) {
         indentMultiLineObjectLiteralBeginningOnBlankLine: true,
     });
     sourceFile.saveSync();
-    return { project, sourceFile: sourceFile };
+    return {project, sourceFile: sourceFile};
 }
 
 module Factory {
@@ -151,14 +141,15 @@ module Factory {
         "maxProperties",
         "minProperties",
     ] as const;
-    type Constraints<
-        K extends keyof Schema["raw"] & (typeof valueConstraints)[number] = keyof Schema["raw"] &
-            (typeof valueConstraints)[number],
-    > = Pick<Schema["raw"], K>;
+    type Constraints<K extends keyof Schema["raw"] & (typeof valueConstraints)[number] = keyof Schema["raw"] & (typeof valueConstraints)[number]> = Pick<
+        Schema["raw"],
+        K
+    >;
 
     export function createInferredType(c: Schema | DiscriminatorProperty, options: GenCtx) {
         return `z.infer<typeof Schemas.${createEntityRef(c, options)}>`;
     }
+
     export function createEntityRef(c: Schema | DiscriminatorProperty, options: GenCtx) {
         return `${pascalCase(c.getName())}`;
     }
@@ -166,6 +157,7 @@ module Factory {
     export function withOptional(required: boolean, fn: () => string): string {
         return required ? fn() : `${fn()}.optional()`;
     }
+
     export function withPassthrough(fn: () => string): string {
         return `${fn()}.passthrough()`;
     }
@@ -174,24 +166,11 @@ module Factory {
         return `z.union([${subSchemas.join(", ")}])`;
     }
 
-    export function createDiscriminatedUnion(c: Schema.Union, subSchemas: string[], options: GenCtx): string {
-        // ensuring discriminator in signature failed due to ts inference in a nested switch statement
-        assert(c.discriminator, `expected discriminator to exists for discriminated union ${c.getName()}`);
-        const discriminatorProperty = c.discriminator!.name;
-        const discriminators = c.schemas.flatMap((s) =>
-            s.kind === "OBJECT"
-                ? s.properties.flatMap((p) =>
-                      p.kind === "DISCRIMINATOR" && p.getName() === discriminatorProperty ? [{ ...p, parent: s }] : []
-                  )
-                : []
-        );
-        const matchProperties = discriminators.flatMap((d) =>
-            d.enum.map((e) => createObjectProperty(stringify(e), createEntityRef(d.parent, options), options))
-        );
+    export function createDiscriminatedUnion(discriminatorProperty: string, mappings: Array<{ discriminatorValue: string; entityRef: string }>, options: GenCtx): string {
+        const matchProperties = mappings.map(p => createObjectProperty(p.discriminatorValue, p.entityRef, options))
+        // add unknown schema
         matchProperties.push(`onDefault: z.object({ ${discriminatorProperty}: z.string().brand("UNKNOWN") })`);
-        return withPassthrough(
-            () => `zc.ZodUnionMatch.matcher("${discriminatorProperty}", ${createObjectTs(matchProperties, options)})`
-        );
+        return withPassthrough(() => `zc.ZodUnionMatch.matcher("${discriminatorProperty}", ${createObjectTs(matchProperties, options)})`);
     }
 
     export function createObjectProperty(name: string, value: string, options: GenCtx): string {
@@ -224,6 +203,7 @@ module Factory {
         function withUnknownVariant(value: string) {
             return `${value}.or(z.string().brand("UNKNOWN"))`;
         }
+
         return withUnknownVariant(`z.enum([${values.map(stringify).join(",")}])`);
     }
 
@@ -251,14 +231,10 @@ module Factory {
             const [curr, val] = param as [keyof Omit<Constraints, "exclusiveMinimum" | "exclusiveMaximum">, number];
             switch (curr) {
                 case "maximum": {
-                    return isExclusiveMax
-                        ? `${value}.refine((n) => n < ${val}, { message: "Value must be less than ${val}" })`
-                        : `${value}.max(${val})`;
+                    return isExclusiveMax ? `${value}.refine((n) => n < ${val}, { message: "Value must be less than ${val}" })` : `${value}.max(${val})`;
                 }
                 case "minimum": {
-                    return isExclusiveMin
-                        ? `${value}.refine((n) => n > ${val}, { message: "Value must be greater than ${val}" })`
-                        : `${value}.min(${val})`;
+                    return isExclusiveMin ? `${value}.refine((n) => n > ${val}, { message: "Value must be greater than ${val}" })` : `${value}.min(${val})`;
                 }
                 case "pattern":
                     return `${value}.regex(/${val}/)`;

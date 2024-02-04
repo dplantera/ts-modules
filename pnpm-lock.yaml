@@ -133,9 +133,6 @@ importers:
       pascal-case:
         specifier: ^4.0.0
         version: 4.0.0
-      prettier:
-        specifier: ^3.2.4
-        version: 3.2.4
       topological-sort:
         specifier: ^0.3.0
         version: 0.3.0
@@ -5114,6 +5111,7 @@ packages:
     resolution: {integrity: sha512-FWu1oLHKCrtpO1ypU6J0SbK2d9Ckwysq6bHj/uaCP26DxrPpppCLQRGVuqAxSTvhF00AcvDRyYrLNW7ocBhFFQ==}
     engines: {node: '>=14'}
     hasBin: true
+    dev: true
 
   /pretty-format@29.6.3:
     resolution: {integrity: sha512-ZsBgjVhFAj5KeK+nHfF1305/By3lechHQSMWCTl8iHSbfOm2TN5nHEtFc/+W7fAyUeCs2n5iow72gld4gW0xDw==}
