@@ -1,4 +1,4 @@
-import {bundleOpenapi} from "../../bundle.js";
+import {bundleOpenapi, OpenApiBundled} from "../../bundle.js";
 import {createSpecProcessor} from "../../post-process/index.js";
 import {generateZod} from "./zod-schemas.js";
 
@@ -20,4 +20,29 @@ describe("generateZod", () => {
 
         expect(sourceFile.getFullText()).toMatchSnapshot(name);
     });
+
+
+    test("circular schema", async () => {
+        const openapi: OpenApiBundled = {
+            openapi: "3.0.3",
+            info: {version: "", title: ""},
+            paths: {},
+            components: {
+                schemas: {
+                    "Node": {
+                        type: "object",
+                        properties: {
+                            id: {type: "string"},
+                            parent: {$ref: '#/components/schemas/Node'},
+                            children: {type: "array", items: {$ref: '#/components/schemas/Node'}}
+                        }
+                    }
+                }
+            }
+        }
+
+        const {sourceFile} = await generateZod(openapi, `test/out/zod/circular.ts`);
+
+        expect(sourceFile.getFullText()).toMatchSnapshot("circular");
+    })
 });

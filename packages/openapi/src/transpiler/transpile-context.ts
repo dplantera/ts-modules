@@ -7,7 +7,10 @@ import { Resolver } from "./resolver.js";
 export interface TranspileContext {
   resolver: Resolver;
   schemas: Map<ComponentNode, Schema>;
+  visited: Map<ComponentNode, ComponentNode>;
+  last: ComponentNode | undefined;
   endpoints: Array<Endpoint>;
+
   clean(): TranspileContext;
 }
 
@@ -27,7 +30,9 @@ export module TranspileContext {
         return this;
       },
       resolver,
+      visited: new Map(),
       schemas: new Map(),
+      last: undefined,
       endpoints: [],
     };
   }
