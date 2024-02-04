@@ -329,7 +329,7 @@ export module Schema {
     if (ctx.schemas.has(schema)) {
       const cachedSchema = ctx.schemas.get(schema);
       assert(_.isDefined(cachedSchema), `expected to find cached transpiled schema for: ${JSON.stringify(schema)}`);
-      cachedSchema.isCircular = ctx.last && ctx.last === schema;
+      cachedSchema.isCircular = ctx.last && (cachedSchema.isCircular || ctx.last === schema);
       return cachedSchema;
     }
 

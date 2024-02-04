@@ -63,57 +63,63 @@ export module ${name} {
   `;
 }
 
-function processSubSchema(c: Schema | DiscriminatorProperty, options: GenCtx) {
+function processSubSchema(c: Schema | DiscriminatorProperty, options: GenCtx, params?: { withOptionalEntityRef?: boolean }) {
   switch (c.component.kind) {
     case "INLINE":
       return Factory.withOptional(c.required, () => processSchema(c, options));
-    case "COMPONENT":
+    case "COMPONENT": {
+      if (params?.withOptionalEntityRef) {
+        return Factory.withOptional(c.required, () => Factory.createEntityRef(c, options));
+      }
       return Factory.createEntityRef(c, options);
+    }
   }
 }
 
 function processSchema(c: Schema | DiscriminatorProperty, options: GenCtx): string {
-  switch (c.kind) {
-    case "UNION": {
-      if (_.isDefined(c.discriminator)) {
-        // transform for zod schema factory
-        const mappings = c.discriminator.mappings.map((d) => ({
-          discriminatorValue: Factory.stringify(d.discriminatorValue),
-          entityRef: Factory.createEntityRef(d, options),
-        }));
-        return Factory.createDiscriminatedUnion(c.discriminator!.name, mappings, options);
+  return Factory.withLazy(c.isCircular ?? false, () => {
+    switch (c.kind) {
+      case "UNION": {
+        if (_.isDefined(c.discriminator)) {
+          // transform for zod schema factory
+          const mappings = c.discriminator.mappings.map((d) => ({
+            discriminatorValue: Factory.stringify(d.discriminatorValue),
+            entityRef: Factory.createEntityRef(d, options),
+          }));
+          return Factory.createDiscriminatedUnion(c.discriminator!.name, mappings, options);
+        }
+        const subSchemas = c.schemas.map((s) => processSubSchema(s, options));
+        return Factory.createUnion(subSchemas, options);
       }
-      const subSchemas = c.schemas.map((s) => processSubSchema(s, options));
-      return Factory.createUnion(c, subSchemas, options);
+      case "OBJECT": {
+        const parent = _.isDefined(c.parent) ? processSubSchema(c.parent, options) : undefined;
+        const properties = c.properties.map((s) => {
+          const name = camelcase.default(s.getName());
+          const value = processSubSchema(s, options, { withOptionalEntityRef: true });
+          return Factory.createObjectProperty(name, value, options);
+        });
+        return Factory.createObject(properties, parent, options);
+      }
+      case "PRIMITIVE": {
+        const primitive = Factory.createPrimitive(c, options);
+        return Factory.withConstraintsAware(c, primitive, options);
+      }
+      case "ENUM": {
+        return Factory.createEnum(c.enum, options);
+      }
+      case "ARRAY": {
+        const item = processSubSchema(c.items, options);
+        const arr = Factory.createArray(item, options);
+        return Factory.withConstraintsAware(c, arr, options);
+      }
+      case "DISCRIMINATOR": {
+        return Factory.createDiscriminator(c.enum, options);
+      }
+      case "BOX": {
+        throw new Error("boxed schemas are not supported");
+      }
     }
-    case "OBJECT": {
-      const parent = _.isDefined(c.parent) ? processSubSchema(c.parent, options) : undefined;
-      const properties = c.properties.map((s) => {
-        const name = camelcase.default(s.getName());
-        const value = processSubSchema(s, options);
-        return Factory.createObjectProperty(name, value, options);
-      });
-      return Factory.createObject(properties, parent, options);
-    }
-    case "PRIMITIVE": {
-      const primitive = Factory.createPrimitive(c, options);
-      return Factory.withConstraintsAware(c, primitive, options);
-    }
-    case "ENUM": {
-      return Factory.createEnum(c, c.enum, options);
-    }
-    case "ARRAY": {
-      const item = processSubSchema(c.items, options);
-      const arr = Factory.createArray(c, item, options);
-      return Factory.withConstraintsAware(c, arr, options);
-    }
-    case "DISCRIMINATOR": {
-      return Factory.createDiscriminator(c, c.enum, options);
-    }
-    case "BOX": {
-      throw new Error("boxed schemas are not supported");
-    }
-  }
+  });
 }
 
 function createTsMorphSrcFile(tsFilePath: string, source: string) {
@@ -151,6 +157,9 @@ module Factory {
     K
   >;
 
+  export function withLazy(condition: boolean, fn: () => string): string {
+    return condition ? `z.lazy(() => ${fn()})` : fn();
+  }
   export function createInferredType(c: Schema | DiscriminatorProperty, options: GenCtx) {
     return `z.infer<typeof Schemas.${createEntityRef(c, options)}>`;
   }
@@ -167,7 +176,7 @@ module Factory {
     return `${fn()}.passthrough()`;
   }
 
-  export function createUnion(c: Schema.Union, subSchemas: string[], options: GenCtx): string {
+  export function createUnion(subSchemas: string[], options: GenCtx): string {
     return `z.union([${subSchemas.join(", ")}])`;
   }
 
@@ -208,7 +217,7 @@ module Factory {
     }
   }
 
-  export function createEnum(c: Schema.OaEnum, values: string[], options: GenCtx): string {
+  export function createEnum(values: string[], options: GenCtx): string {
     function withUnknownVariant(value: string) {
       return `${value}.or(z.string().brand("UNKNOWN"))`;
     }
@@ -216,11 +225,11 @@ module Factory {
     return withUnknownVariant(`z.enum([${values.map(stringify).join(",")}])`);
   }
 
-  export function createArray(c: Schema.OaArray, item: string, options: GenCtx): string {
+  export function createArray(item: string, options: GenCtx): string {
     return `z.array(${item})`;
   }
 
-  export function createDiscriminator(c: Schema.DiscriminatorProperty, values: string[], options: GenCtx): string {
+  export function createDiscriminator(values: string[], options: GenCtx): string {
     if (values.length <= 1) {
       return literal(values[0]);
     }

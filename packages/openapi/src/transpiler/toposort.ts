@@ -10,12 +10,18 @@ export module Toposort {
     const collectedEdges: Map<Schema, Set<Schema>> = new Map();
     const nodes = new Set<Schema>();
     schemas.forEach((s) => collectEdges(s, undefined, collectedEdges, nodes));
-    const edges = Array.from(collectedEdges.entries()).reduce((acc, entry) => {
-      const [parent, children] = entry as unknown as [Schema, Set<Schema>];
-      return [...acc, ...Array.from(children).map((c) => [parent, c])];
-    }, <Array<Array<Schema>>>[]);
+    const edges = Array.from(collectedEdges.entries()).reduce(
+      (acc, entry) => {
+        const [parent, children] = entry as unknown as [Schema, Set<Schema>];
+        return [...acc, ...Array.from(children).map((c) => [parent, c])];
+      },
+      <Array<Array<Schema>>>[],
+    );
     try {
-      const sorted: Array<Schema> = toposort(edges);
+      const sorted: Array<Schema> = toposort.array(
+        Array.from(nodes.values()).filter((d) => d.component.kind === "COMPONENT"),
+        edges,
+      );
       // parent of a schema got produced twice - maybe we need to migrate to ids to avoid that...
       return ensureUniqueSchemas(sorted);
     } catch (e) {
@@ -35,6 +41,10 @@ export module Toposort {
     if (_.isDefined(parent) && !nodes.has(parent)) {
       nodes.add(parent);
     }
+    function withoutCircles(s: Schema, fn: () => void) {
+      if (s.isCircular) return;
+      return fn();
+    }
     function addEdge(_parent: Schema, _child: Schema) {
       if (!ctx.has(_parent)) {
         ctx.set(_parent, new Set());
@@ -52,13 +62,13 @@ export module Toposort {
 
     switch (child.kind) {
       case "ARRAY":
-        collectEdges(child.items, child, ctx, nodes);
+        withoutCircles(child.items, () => collectEdges(child.items, child, ctx, nodes));
         return;
       case "UNION":
-        child.schemas.forEach((s) => collectEdges(s, child, ctx, nodes));
+        child.schemas.forEach((s) => withoutCircles(s, () => collectEdges(s, child, ctx, nodes)));
         return;
       case "OBJECT":
-        child.properties.flatMap((d) => (d.kind === "DISCRIMINATOR" ? [] : [d])).forEach((s) => collectEdges(s, child, ctx, nodes));
+        child.properties.flatMap((d) => (d.kind === "DISCRIMINATOR" ? [] : [d])).forEach((s) => withoutCircles(s, () => collectEdges(s, child, ctx, nodes)));
         if (_.isDefined(child.parent)) {
           addEdge(child, child.parent);
           collectEdges(child.parent, undefined, ctx, nodes);
@@ -66,6 +76,7 @@ export module Toposort {
         return;
       case "PRIMITIVE":
       case "ENUM":
+      case "BOX":
         return;
     }
   }

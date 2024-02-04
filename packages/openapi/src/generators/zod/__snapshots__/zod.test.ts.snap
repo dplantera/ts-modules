@@ -1,5 +1,20 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`generateZod circular schema: circular 1`] = `
+"import { z } from 'zod'
+import * as zc from './zod-common.js'
+
+export module Schemas {
+    export const Node = z.lazy(() => z.object({ id: z.string().optional(), node: Node.optional(), children: z.array(Node).optional() }));
+
+    export module Types {
+        export type Node = z.infer<typeof Schemas.Node>;
+    }
+
+}
+"
+`;
+
 exports[`generateZod generates test/specs/generic/api.yml: /generic/api 1`] = `
 "import { z } from 'zod'
 import * as zc from './zod-common.js'
@@ -13,6 +28,7 @@ export module Schemas {
     export const Cat = zc.ZodUnionMatch.matcher("catType", { 'SEAM': Seam, 'SHORT': ShortHair, onDefault: z.object({ catType: z.string().brand("UNKNOWN") }) }).passthrough();
     export const Pet = zc.ZodUnionMatch.matcher("type", { 'DOG': Dog, 'CAT': Cat, 'BIRD': GenericPet, 'HAMSTER': GenericPet, onDefault: z.object({ type: z.string().brand("UNKNOWN") }) }).passthrough();
     export const Pets = z.array(Pet).max(100);
+    export const CatBase = z.object({ color: z.string(), catType: z.enum(['SEAM', 'SHORT']).or(z.string().brand("UNKNOWN")).optional() });
 
     export module Types {
         export type PetBase = z.infer<typeof Schemas.PetBase>;
@@ -23,6 +39,7 @@ export module Schemas {
         export type Cat = z.infer<typeof Schemas.Cat>;
         export type Pet = z.infer<typeof Schemas.Pet>;
         export type Pets = z.infer<typeof Schemas.Pets>;
+        export type CatBase = z.infer<typeof Schemas.CatBase>;
     }
 
 }
@@ -36,7 +53,7 @@ import * as zc from './zod-common.js'
 export module Schemas {
     export const PetBase = z.object({ type: z.string(), name: z.string().optional() });
     export const DogEnum = z.enum(['DOG_A', 'DOG_B']).or(z.string().brand("UNKNOWN"));
-    export const Dog = PetBase.merge(z.object({ fluffy: z.boolean().optional(), dogEnum: DogEnum, type: z.literal('DOG') }));
+    export const Dog = PetBase.merge(z.object({ fluffy: z.boolean().optional(), dogEnum: DogEnum.optional(), type: z.literal('DOG') }));
     export const Cat = PetBase.merge(z.object({ breed: z.enum(['CAT_A', 'CAT_B']).or(z.string().brand("UNKNOWN")).optional(), type: z.literal('CAT') }));
     export const Pet = zc.ZodUnionMatch.matcher("type", { 'DOG': Dog, 'CAT': Cat, onDefault: z.object({ type: z.string().brand("UNKNOWN") }) }).passthrough();
 
@@ -58,19 +75,19 @@ import * as zc from './zod-common.js'
 
 export module Schemas {
     export const FluffLevel = z.enum(['A', 'B', 'C']).or(z.string().brand("UNKNOWN"));
-    export const SchemasToy = z.object({ id: z.string(), price: z.string(), kind: z.string(), fluffLevel: FluffLevel, targetGroup: z.string().optional(), someEnum: z.enum(['FOO', 'BAR']).or(z.string().brand("UNKNOWN")).optional() });
-    export const FluffyTeddy = z.object({ id: z.string(), price: z.string(), kind: z.literal('TEDDY'), fluffLevel: FluffLevel, targetGroup: z.string().optional() });
-    export const Ball = z.object({ id: z.string(), price: z.string(), kind: z.literal('BALL'), fluffLevel: FluffLevel, targetGroup: z.string().optional() });
+    export const SchemasToy = z.object({ id: z.string(), price: z.string(), kind: z.string(), fluffLevel: FluffLevel.optional(), targetGroup: z.string().optional(), someEnum: z.enum(['FOO', 'BAR']).or(z.string().brand("UNKNOWN")).optional() });
+    export const FluffyTeddy = z.object({ id: z.string(), price: z.string(), kind: z.literal('TEDDY'), fluffLevel: FluffLevel.optional(), targetGroup: z.string().optional() });
+    export const Ball = z.object({ id: z.string(), price: z.string(), kind: z.literal('BALL'), fluffLevel: FluffLevel.optional(), targetGroup: z.string().optional() });
     export const PetToy = zc.ZodUnionMatch.matcher("kind", { 'BALL': Ball, 'TEDDY': FluffyTeddy, onDefault: z.object({ kind: z.string().brand("UNKNOWN") }) }).passthrough();
     export const SchemaUntitled = z.object({ untitledProp: z.string().optional() });
-    export const Color = z.object({ untitledProp: z.string().optional(), colorId: z.string().optional(), schemaUntitled: SchemaUntitled });
+    export const Color = z.object({ untitledProp: z.string().optional(), colorId: z.string().optional(), schemaUntitled: SchemaUntitled.optional() });
     export const TargetGroup = z.string();
-    export const ComponentsSchemasToy = z.object({ id: z.string(), price: z.string(), kind: z.string(), fluffLevel: FluffLevel, targetGroup: TargetGroup, someEnum: z.enum(['FOO', 'BAR']).or(z.string().brand("UNKNOWN")).optional(), subId: z.string().optional(), name: z.string().optional(), color: Color, petToy: PetToy });
-    export const Pet = z.object({ id: z.number().int(), componentsSchemasToy: ComponentsSchemasToy, schemasToy: SchemasToy, fluffLevel: FluffLevel, tag: z.string().optional(), name: z.string() });
+    export const ComponentsSchemasToy = z.object({ id: z.string(), price: z.string(), kind: z.string(), fluffLevel: FluffLevel.optional(), targetGroup: TargetGroup.optional(), someEnum: z.enum(['FOO', 'BAR']).or(z.string().brand("UNKNOWN")).optional(), subId: z.string().optional(), name: z.string().optional(), color: Color.optional(), petToy: PetToy.optional() });
+    export const Pet = z.object({ id: z.number().int(), componentsSchemasToy: ComponentsSchemasToy.optional(), schemasToy: SchemasToy.optional(), fluffLevel: FluffLevel.optional(), tag: z.string().optional(), name: z.string() });
     export const Pets = z.array(Pet).max(100);
     export const SchemaTitled = z.object({ titledProp: z.string().optional() });
     export const HttpErrorCode = z.number().int();
-    export const Error = z.object({ httpErrorCode: HttpErrorCode, message: z.string(), schemaTitled: SchemaTitled });
+    export const Error = z.object({ httpErrorCode: HttpErrorCode.optional(), message: z.string(), schemaTitled: SchemaTitled.optional() });
 
     export module Types {
         export type FluffLevel = z.infer<typeof Schemas.FluffLevel>;

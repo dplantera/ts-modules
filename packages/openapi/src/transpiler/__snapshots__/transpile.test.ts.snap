@@ -50217,6 +50217,78 @@ exports[`transpiler transpile test/specs/generic/api.yml: schemas-sorted 1`] = `
     "required": false,
     "type": "array",
   },
+  {
+    "component": {
+      "id": "#/components/schemas/CatBase",
+      "kind": "COMPONENT",
+    },
+    "getName": [Function],
+    "kind": "OBJECT",
+    "parent": undefined,
+    "properties": [
+      {
+        "component": {
+          "kind": "INLINE",
+          "name": "color",
+        },
+        "format": undefined,
+        "getName": [Function],
+        "kind": "PRIMITIVE",
+        "raw": {
+          "type": "string",
+        },
+        "required": true,
+        "type": "string",
+      },
+      {
+        "component": {
+          "kind": "INLINE",
+          "name": "catType",
+        },
+        "enum": [
+          "SEAM",
+          "SHORT",
+        ],
+        "format": undefined,
+        "getName": [Function],
+        "kind": "ENUM",
+        "raw": {
+          "enum": [
+            "SEAM",
+            "SHORT",
+          ],
+          "title": "CatType",
+          "type": "string",
+        },
+        "required": false,
+        "type": "string",
+      },
+    ],
+    "raw": {
+      "discriminator": {
+        "propertyName": "catType",
+      },
+      "properties": {
+        "catType": {
+          "enum": [
+            "SEAM",
+            "SHORT",
+          ],
+          "title": "CatType",
+          "type": "string",
+        },
+        "color": {
+          "type": "string",
+        },
+      },
+      "required": [
+        "color",
+      ],
+      "title": "CatBase",
+    },
+    "required": false,
+    "type": "object",
+  },
 ]
 `;
 
