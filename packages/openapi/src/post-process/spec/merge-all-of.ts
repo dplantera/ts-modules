@@ -5,8 +5,8 @@ import { oas30 } from "openapi3-ts";
 import { _ } from "@dsp/node-sdk";
 
 import jsonSchemaMergeAllOff from "json-schema-merge-allof";
-import { cleanObj, DeepSchemaResolverContext, DeepSchemaResolver } from "../../transpiler/resolver-deep.js";
 import { isRef } from "@redocly/openapi-core";
+import { cleanObj, SchemaResolverContext } from "../../resolver/index.js";
 
 export function mergeAllOf(bundled: OpenApiBundled) {
   const mergedAllOf = _.cloneDeep(bundled);
@@ -15,7 +15,7 @@ export function mergeAllOf(bundled: OpenApiBundled) {
   return mergedAllOf;
 }
 
-function doMerge(schema: any, ctx: DeepSchemaResolverContext) {
+function doMerge(schema: any, ctx: SchemaResolverContext) {
   const subSchemas: Array<oas30.ReferenceObject | oas30.SchemaObject> = schema.allOf ?? [];
 
   const clonedSchemas = _.cloneDeep(subSchemas);
@@ -78,7 +78,7 @@ function doMerge(schema: any, ctx: DeepSchemaResolverContext) {
 
 function resolveSubSchemas(
   subSchemas: Array<oas30.ReferenceObject | oas30.SchemaObject>,
-  ctx: DeepSchemaResolverContext
+  ctx: SchemaResolverContext
 ): Array<{ pointer: string | undefined; resolved: oas30.SchemaObject & { $ref?: string } }> {
   const subs = subSchemas.map((d) => {
     return resolveRefNode(d, ctx, { deleteRef: true });
@@ -103,10 +103,10 @@ function getJsonSchemaMergeAllOff(subschemas: Array<{ pointer: string | undefine
   );
 }
 
-function mergeSubSchemas(_resolvedSchemas: Array<{ pointer: string | undefined; resolved: oas30.SchemaObject }>, ctx: DeepSchemaResolverContext) {
+function mergeSubSchemas(_resolvedSchemas: Array<{ pointer: string | undefined; resolved: oas30.SchemaObject }>, ctx: SchemaResolverContext) {
   const subschemas = _resolvedSchemas.map((d) => ({
     pointer: d.pointer,
-    resolved: ctx.resolveRef(d.resolved, { deleteRef: true }),
+    resolved: ctx.resolver.resolveRef(d.resolved, { deleteRef: true }),
   }));
 
   const merged = getJsonSchemaMergeAllOff(subschemas);
@@ -134,18 +134,20 @@ function mergeSubSchemas(_resolvedSchemas: Array<{ pointer: string | undefined; 
 }
 
 function findSchemaObjectsWithAllOf(bundled: OpenApiBundled) {
-  return DeepSchemaResolver.findSchemaObjectsWith(bundled, (node) => _.isDefined(node.allOf));
+  const resolver = SchemaResolverContext.create(bundled);
+  const collected = resolver.schemas.filter((s) => _.isDefined(s.allOf));
+  return { collected, ctx: resolver };
 }
 
-function resolveRefNode(data: { $ref: string } | unknown, ctx: DeepSchemaResolverContext, params?: { deleteRef: boolean }) {
+function resolveRefNode(data: { $ref: string } | unknown, ctx: SchemaResolverContext, params?: { deleteRef: boolean }) {
   if (!isRef(data)) {
     return {
       pointer: undefined,
-      resolved: ctx.resolveRef(data as oas30.SchemaObject, params),
+      resolved: ctx.resolver.resolveRef(data as oas30.SchemaObject, params),
     };
   }
   return {
     pointer: data["$ref"],
-    resolved: ctx.resolveRef(data, params),
+    resolved: ctx.resolver.resolveRef(data, params),
   };
 }

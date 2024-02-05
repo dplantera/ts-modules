@@ -10,6 +10,7 @@ export module Transpiler {
     const transpiler = TranspileContext.create(_.cloneDeep(bundled));
     const endpointTranspiler = TranspileEndpointCtx.create(transpiler);
     return {
+      ctx: transpiler,
       endpoints() {
         return transpiler.endpoints.length > 0 ? transpiler.endpoints : Endpoint.transpileAll(endpointTranspiler);
       },

@@ -1,16 +1,15 @@
 import { OpenApiBundled } from "../bundle.js";
 import { oas30 } from "openapi3-ts";
-import { OaComponent } from "./transpile-schema.js";
 import { isRef } from "@redocly/openapi-core";
 import pointer from "jsonpointer";
 import { _ } from "@dsp/node-sdk";
+import { OaComponent } from "./model.js";
 
-type WithOptionalRef<T extends oas30.ReferenceObject | OaComponent> = Exclude<T, oas30.ReferenceObject> & { "::ref"?: string; $ref?: string };
+export type WithOptionalRef<T extends oas30.ReferenceObject | OaComponent> = Exclude<T, oas30.ReferenceObject> & { "::ref"?: string; $ref?: string };
 type WithoutRef<T extends oas30.ReferenceObject | OaComponent> = Exclude<T, oas30.ReferenceObject>;
 
 export interface Resolver {
   root: OpenApiBundled;
-
   resolveRefOptional<T extends oas30.ReferenceObject | OaComponent>(data: T | undefined): WithOptionalRef<T> | undefined;
   resolveRef<T extends oas30.ReferenceObject | OaComponent>(
     data: T,

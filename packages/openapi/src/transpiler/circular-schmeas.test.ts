@@ -1,32 +1,9 @@
-import { bundleOpenapi, OpenApiBundled } from "../../bundle.js";
-import { createSpecProcessor } from "../../post-process/index.js";
-import { GenCtx, generateZod } from "./zod-schemas.js";
+import { OpenApiBundled } from "../bundle.js";
 import { oas30 } from "openapi3-ts";
+import { SchemaGraph } from "./circular-schmeas.js";
 
-const options: () => GenCtx = () => ({
-  includeTsTypes: false,
-});
-describe("generateZod", () => {
-  test.each([
-    "test/specs/pets-modular/pets-api.yml",
-    "test/specs/pets-simple/pets-api.yml",
-    "test/specs/pets-modular-complex/petstore-api.yml",
-    "test/specs/generic/api.yml",
-    "test/specs/pets-recursive/pets-api.yml",
-  ])("generates %s", async (api) => {
-    const { parsed } = await bundleOpenapi(api, {
-      postProcessor: createSpecProcessor({
-        mergeAllOf: true,
-        ensureDiscriminatorValues: true,
-      }),
-    });
-    const name = api.replace("test/specs", "").replace(".yml", "");
-    const { sourceFile } = await generateZod(parsed, `test/out/zod/${name}.ts`, options());
-
-    expect(sourceFile.getFullText()).toMatchSnapshot(name);
-  });
-
-  test("circular schema", async () => {
+describe("find circles", () => {
+  test("circular", () => {
     const openapi: OpenApiBundled = createApi((oa) =>
       withSchemas(oa, {
         Node: {
@@ -39,13 +16,13 @@ describe("generateZod", () => {
         },
       })
     );
-
-    const { sourceFile } = await generateZod(openapi, `test/out/zod/circular.ts`, options());
-
-    expect(sourceFile.getFullText()).toMatchSnapshot("circular");
+    const result = SchemaGraph.createFromBundled(openapi);
+    expect(Array.from(result.circles.values())).toEqual(["#/components/schemas/Node"]);
+    expect(Array.from(result.nodes.keys())).toEqual(["#/components/schemas/Node"]);
+    expect(result.edges).toEqual([]);
   });
 
-  test("deeply nested circular schema", async () => {
+  test("simple nested circular", () => {
     const openapi: OpenApiBundled = createApi((oa) =>
       withSchemas(oa, {
         Node: {
@@ -102,37 +79,25 @@ describe("generateZod", () => {
         },
       })
     );
-    const { sourceFile } = await generateZod(openapi, `test/out/zod/circular.ts`, options());
-
-    expect(sourceFile.getFullText().trim()).toMatchInlineSnapshot(`
-      "import { z } from 'zod'
-      import * as zc from './zod-common.js'
-
-      export module Schemas {
-          export const Base = z.object({ type: z.string().optional() });
-          export const B: z.ZodTypeAny = z.lazy(() => Base.merge(z.object({ id: z.string().optional(), node: Node.optional(), children: z.lazy(() => z.array(Node)).optional(), type: z.literal('B') })));
-          export const A: z.ZodTypeAny = z.lazy(() => Base.merge(z.object({ id: z.string().optional(), node: Node.optional(), children: z.lazy(() => z.array(Node)).optional(), type: z.literal('A') })));
-          export const Child: z.ZodTypeAny = z.lazy(() => zc.ZodUnionMatch.matcher("type", { 'A': A, 'B': B, 'Node': Node, onDefault: z.object({ type: z.string().brand("UNKNOWN") }).passthrough() }));
-          export const Node: z.ZodTypeAny = z.lazy(() => z.object({ id: z.string().optional(), node: Node.optional(), children: z.array(Child).optional() }));
-
-          export module Types {
-              export type Base = z.infer<typeof Schemas.Base>;
-              export type B = z.infer<typeof Schemas.B>;
-              export type A = z.infer<typeof Schemas.A>;
-              export type Child = z.infer<typeof Schemas.Child>;
-              export type Node = z.infer<typeof Schemas.Node>;
-          }
-
-
-          export module Unions {
-              export const Child = z.lazy(() => z.union([A, B, Node]));
-          }
-
-      }"
-    `);
+    const result = SchemaGraph.createFromBundled(openapi);
+    expect(Array.from(result.circles.values())).toEqual(["#/components/schemas/Node"]);
+    expect(Array.from(result.nodes.keys())).toEqual([
+      "#/components/schemas/Node",
+      "#/components/schemas/Child",
+      "#/components/schemas/A",
+      "#/components/schemas/Base",
+      "#/components/schemas/B",
+    ]);
+    expect(result.edges).toEqual([
+      ["#/components/schemas/Node", "#/components/schemas/Child"],
+      ["#/components/schemas/Child", "#/components/schemas/A"],
+      ["#/components/schemas/Child", "#/components/schemas/B"],
+      ["#/components/schemas/A", "#/components/schemas/Base"],
+      ["#/components/schemas/B", "#/components/schemas/Base"],
+    ]);
   });
 
-  test("deeply nested multi circular schema", async () => {
+  test("deeply nested circular", () => {
     const openapi: OpenApiBundled = createApi((oa) =>
       withSchemas(oa, {
         Node: {
@@ -187,37 +152,25 @@ describe("generateZod", () => {
         },
       })
     );
-    const { sourceFile } = await generateZod(openapi, `test/out/zod/circular.ts`, options());
-
-    expect(sourceFile.getFullText().trim()).toMatchInlineSnapshot(`
-      "import { z } from 'zod'
-      import * as zc from './zod-common.js'
-
-      export module Schemas {
-          export const Base = z.object({ type: z.string().optional() });
-          export const B: z.ZodTypeAny = z.lazy(() => Base.merge(z.object({ child: Child.optional(), children: z.lazy(() => z.array(Node)).optional(), type: z.literal('B') })));
-          export const A: z.ZodTypeAny = z.lazy(() => Base.merge(z.object({ child: Child.optional(), children: z.lazy(() => z.array(Node)).optional(), type: z.literal('A') })));
-          export const Child: z.ZodTypeAny = z.lazy(() => zc.ZodUnionMatch.matcher("type", { 'A': A, 'B': B, 'Node': Node, onDefault: z.object({ type: z.string().brand("UNKNOWN") }).passthrough() }));
-          export const Node: z.ZodTypeAny = z.lazy(() => z.object({ id: z.string().optional(), node: Node.optional(), children: z.lazy(() => z.array(Child)).optional() }));
-
-          export module Types {
-              export type Base = z.infer<typeof Schemas.Base>;
-              export type B = z.infer<typeof Schemas.B>;
-              export type A = z.infer<typeof Schemas.A>;
-              export type Child = z.infer<typeof Schemas.Child>;
-              export type Node = z.infer<typeof Schemas.Node>;
-          }
-
-
-          export module Unions {
-              export const Child = z.lazy(() => z.union([A, B, Node]));
-          }
-
-      }"
-    `);
+    const result = SchemaGraph.createFromBundled(openapi);
+    expect(Array.from(result.circles.values())).toEqual(["#/components/schemas/Node", "#/components/schemas/Child"]);
+    expect(Array.from(result.nodes.keys())).toEqual([
+      "#/components/schemas/Node",
+      "#/components/schemas/Child",
+      "#/components/schemas/A",
+      "#/components/schemas/Base",
+      "#/components/schemas/B",
+    ]);
+    expect(result.edges).toEqual([
+      ["#/components/schemas/Node", "#/components/schemas/Child"],
+      ["#/components/schemas/Child", "#/components/schemas/A"],
+      ["#/components/schemas/Child", "#/components/schemas/B"],
+      ["#/components/schemas/A", "#/components/schemas/Base"],
+      ["#/components/schemas/B", "#/components/schemas/Base"],
+    ]);
   });
 
-  test("deeply 3 deep nested multi circular schema", async () => {
+  test("3 deeply nested circular", () => {
     const openapi: OpenApiBundled = createApi((oa) =>
       withSchemas(oa, {
         Node: {
@@ -278,36 +231,29 @@ describe("generateZod", () => {
         },
       })
     );
-    const { sourceFile } = await generateZod(openapi, `test/out/zod/circular.ts`, options());
-
-    expect(sourceFile.getFullText().trim()).toMatchInlineSnapshot(`
-      "import { z } from 'zod'
-      import * as zc from './zod-common.js'
-
-      export module Schemas {
-          export const Base = z.object({ type: z.string().optional() });
-          export const B: z.ZodTypeAny = Base.merge(z.object({ children: z.lazy(() => z.array(Rec)).optional(), type: z.literal('B') }));
-          export const Rec: z.ZodTypeAny = z.lazy(() => z.object({ a: A.optional(), b: B.optional(), child: Child.optional(), node: Node.optional() }));
-          export const A: z.ZodTypeAny = z.lazy(() => Base.merge(z.object({ children: z.lazy(() => z.array(Rec)).optional(), type: z.literal('A') })));
-          export const Child: z.ZodTypeAny = z.lazy(() => zc.ZodUnionMatch.matcher("type", { 'A': A, 'B': B, onDefault: z.object({ type: z.string().brand("UNKNOWN") }).passthrough() }));
-          export const Node: z.ZodTypeAny = z.lazy(() => z.object({ id: z.string().optional(), node: Node.optional(), children: z.lazy(() => z.array(Child)).optional() }));
-
-          export module Types {
-              export type Base = z.infer<typeof Schemas.Base>;
-              export type B = z.infer<typeof Schemas.B>;
-              export type Rec = z.infer<typeof Schemas.Rec>;
-              export type A = z.infer<typeof Schemas.A>;
-              export type Child = z.infer<typeof Schemas.Child>;
-              export type Node = z.infer<typeof Schemas.Node>;
-          }
-
-
-          export module Unions {
-              export const Child = z.lazy(() => z.union([A, B]));
-          }
-
-      }"
-    `);
+    const result = SchemaGraph.createFromBundled(openapi);
+    expect(Array.from(result.circles.values())).toEqual([
+      "#/components/schemas/Node",
+      "#/components/schemas/A",
+      "#/components/schemas/Rec",
+      "#/components/schemas/Child",
+    ]);
+    expect(Array.from(result.nodes.keys())).toEqual([
+      "#/components/schemas/Node",
+      "#/components/schemas/Child",
+      "#/components/schemas/A",
+      "#/components/schemas/Base",
+      "#/components/schemas/Rec",
+      "#/components/schemas/B",
+    ]);
+    expect(result.edges).toEqual([
+      ["#/components/schemas/Node", "#/components/schemas/Child"],
+      ["#/components/schemas/Child", "#/components/schemas/A"],
+      ["#/components/schemas/Child", "#/components/schemas/B"],
+      ["#/components/schemas/A", "#/components/schemas/Base"],
+      ["#/components/schemas/Rec", "#/components/schemas/B"],
+      ["#/components/schemas/B", "#/components/schemas/Base"],
+    ]);
   });
 });
 

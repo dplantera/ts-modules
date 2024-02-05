@@ -139,19 +139,15 @@ export const createRequestFunction = function (axiosArgs: RequestArgs, globalAxi
 }
 
 
-{{#no}}
-    {{#zodEnabled}}
-        import { z } from "zod";
-        export type UNKNOWN_ENUM_VARIANT = string & z.BRAND<"UNKNOWN">;
-    {{/zodEnabled}}
-    {{^zodEnabled}}
-        // the symbol is unique for that instance - types won't be compatible when using different symbols across apis or libs
-        export declare const BRAND: unique symbol;
-        export declare type BRAND<T extends string | number | symbol> = {
-            [BRAND]: { [k in T]: true; };
-        };
-        export type UNKNOWN_ENUM_VARIANT = string & BRAND<"UNKNOWN">;
-    {{/zodEnabled}}
-{{/no}}
-declare const tag: unique symbol;
-export type UNKNOWN_ENUM_VARIANT = string & {readonly [tag]: "UNKNOWN";};
+{{#zodEnabled}}
+import { z } from "zod";
+export type UNKNOWN_ENUM_VARIANT = string & z.BRAND<"UNKNOWN">;
+{{/zodEnabled}}
+{{^zodEnabled}}
+// the symbol is unique for that instance - types won't be compatible when using different symbols across apis or libs
+export declare const BRAND: unique symbol;
+export declare type BRAND<T extends string | number | symbol> = {
+    [BRAND]: { [k in T]: true; };
+};
+export type UNKNOWN_ENUM_VARIANT = string & BRAND<"UNKNOWN">;
+{{/zodEnabled}}

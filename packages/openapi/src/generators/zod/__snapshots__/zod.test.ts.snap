@@ -5,7 +5,7 @@ exports[`generateZod circular schema: circular 1`] = `
 import * as zc from './zod-common.js'
 
 export module Schemas {
-    export const Node = z.lazy(() => z.object({ id: z.string().optional(), node: Node.optional(), children: z.array(Node).optional() }));
+    export const Node: z.ZodTypeAny = z.lazy(() => z.object({ id: z.string().optional(), node: Node.optional(), children: z.lazy(() => z.array(Node)).optional() }));
 
     export module Types {
         export type Node = z.infer<typeof Schemas.Node>;
@@ -25,8 +25,8 @@ export module Schemas {
     export const Dog = PetBase.merge(z.object({ bark: z.string(), type: z.literal('DOG') }));
     export const ShortHair = z.object({ color: z.string(), catType: z.literal('SHORT'), angryLevel: z.string().optional(), type: z.literal('CAT') });
     export const Seam = PetBase.merge(z.object({ color: z.string(), catType: z.literal('SEAM'), angryLevel: z.string().regex(/\\w+/).optional(), type: z.literal('CAT') }));
-    export const Cat = zc.ZodUnionMatch.matcher("catType", { 'SEAM': Seam, 'SHORT': ShortHair, onDefault: z.object({ catType: z.string().brand("UNKNOWN") }) }).passthrough();
-    export const Pet = zc.ZodUnionMatch.matcher("type", { 'DOG': Dog, 'CAT': Cat, 'BIRD': GenericPet, 'HAMSTER': GenericPet, onDefault: z.object({ type: z.string().brand("UNKNOWN") }) }).passthrough();
+    export const Cat = zc.ZodUnionMatch.matcher("catType", { 'SEAM': Seam, 'SHORT': ShortHair, onDefault: z.object({ catType: z.string().brand("UNKNOWN") }).passthrough() });
+    export const Pet = zc.ZodUnionMatch.matcher("type", { 'DOG': Dog, 'CAT': Cat, 'BIRD': GenericPet, 'HAMSTER': GenericPet, onDefault: z.object({ type: z.string().brand("UNKNOWN") }).passthrough() });
     export const Pets = z.array(Pet).max(100);
     export const CatBase = z.object({ color: z.string(), catType: z.enum(['SEAM', 'SHORT']).or(z.string().brand("UNKNOWN")).optional() });
 
@@ -42,6 +42,12 @@ export module Schemas {
         export type CatBase = z.infer<typeof Schemas.CatBase>;
     }
 
+
+    export module Unions {
+        export const Cat = z.union([Seam, ShortHair]);
+        export const Pet = z.union([Cat, Dog, GenericPet]);
+    }
+
 }
 "
 `;
@@ -55,7 +61,7 @@ export module Schemas {
     export const DogEnum = z.enum(['DOG_A', 'DOG_B']).or(z.string().brand("UNKNOWN"));
     export const Dog = PetBase.merge(z.object({ fluffy: z.boolean().optional(), dogEnum: DogEnum.optional(), type: z.literal('DOG') }));
     export const Cat = PetBase.merge(z.object({ breed: z.enum(['CAT_A', 'CAT_B']).or(z.string().brand("UNKNOWN")).optional(), type: z.literal('CAT') }));
-    export const Pet = zc.ZodUnionMatch.matcher("type", { 'DOG': Dog, 'CAT': Cat, onDefault: z.object({ type: z.string().brand("UNKNOWN") }) }).passthrough();
+    export const Pet = zc.ZodUnionMatch.matcher("type", { 'DOG': Dog, 'CAT': Cat, onDefault: z.object({ type: z.string().brand("UNKNOWN") }).passthrough() });
 
     export module Types {
         export type PetBase = z.infer<typeof Schemas.PetBase>;
@@ -63,6 +69,11 @@ export module Schemas {
         export type Dog = z.infer<typeof Schemas.Dog>;
         export type Cat = z.infer<typeof Schemas.Cat>;
         export type Pet = z.infer<typeof Schemas.Pet>;
+    }
+
+
+    export module Unions {
+        export const Pet = z.union([Cat, Dog]);
     }
 
 }
@@ -78,7 +89,7 @@ export module Schemas {
     export const SchemasToy = z.object({ id: z.string(), price: z.string(), kind: z.string(), fluffLevel: FluffLevel.optional(), targetGroup: z.string().optional(), someEnum: z.enum(['FOO', 'BAR']).or(z.string().brand("UNKNOWN")).optional() });
     export const FluffyTeddy = z.object({ id: z.string(), price: z.string(), kind: z.literal('TEDDY'), fluffLevel: FluffLevel.optional(), targetGroup: z.string().optional() });
     export const Ball = z.object({ id: z.string(), price: z.string(), kind: z.literal('BALL'), fluffLevel: FluffLevel.optional(), targetGroup: z.string().optional() });
-    export const PetToy = zc.ZodUnionMatch.matcher("kind", { 'BALL': Ball, 'TEDDY': FluffyTeddy, onDefault: z.object({ kind: z.string().brand("UNKNOWN") }) }).passthrough();
+    export const PetToy = zc.ZodUnionMatch.matcher("kind", { 'BALL': Ball, 'TEDDY': FluffyTeddy, onDefault: z.object({ kind: z.string().brand("UNKNOWN") }).passthrough() });
     export const SchemaUntitled = z.object({ untitledProp: z.string().optional() });
     export const Color = z.object({ untitledProp: z.string().optional(), colorId: z.string().optional(), schemaUntitled: SchemaUntitled.optional() });
     export const TargetGroup = z.string();
@@ -106,6 +117,39 @@ export module Schemas {
         export type Error = z.infer<typeof Schemas.Error>;
     }
 
+
+    export module Unions {
+        export const PetToy = z.union([Ball, FluffyTeddy]);
+    }
+
+}
+"
+`;
+
+exports[`generateZod generates test/specs/pets-recursive/pets-api.yml: /pets-recursive/pets-api 1`] = `
+"import { z } from 'zod'
+import * as zc from './zod-common.js'
+
+export module Schemas {
+    export const PetBase = z.object({ type: z.string() });
+    export const Dog: z.ZodTypeAny = z.lazy(() => PetBase.merge(z.object({ pets: Pets.optional(), type: z.literal('DOG') })));
+    export const Cat: z.ZodTypeAny = z.lazy(() => PetBase.merge(z.object({ pets: Pets.optional(), type: z.literal('CAT') })));
+    export const Pet = zc.ZodUnionMatch.matcher("type", { 'CAT': Cat, 'DOG': Dog, onDefault: z.object({ type: z.string().brand("UNKNOWN") }).passthrough() });
+    export const Pets: z.ZodTypeAny = z.lazy(() => z.object({ pets: z.array(Pet).max(100).optional() }));
+
+    export module Types {
+        export type PetBase = z.infer<typeof Schemas.PetBase>;
+        export type Dog = z.infer<typeof Schemas.Dog>;
+        export type Cat = z.infer<typeof Schemas.Cat>;
+        export type Pet = z.infer<typeof Schemas.Pet>;
+        export type Pets = z.infer<typeof Schemas.Pets>;
+    }
+
+
+    export module Unions {
+        export const Pet = z.union([Cat, Dog]);
+    }
+
 }
 "
 `;
@@ -118,7 +162,7 @@ export module Schemas {
     export const PetBase = z.object({ id: z.number().int(), type: z.string() });
     export const Dog = PetBase.merge(z.object({ bark: z.string(), type: z.literal('DOG') }));
     export const Cat = PetBase.merge(z.object({ color: z.string(), type: z.literal('CAT') }));
-    export const Pet = zc.ZodUnionMatch.matcher("type", { 'DOG': Dog, 'CAT': Cat, onDefault: z.object({ type: z.string().brand("UNKNOWN") }) }).passthrough();
+    export const Pet = zc.ZodUnionMatch.matcher("type", { 'DOG': Dog, 'CAT': Cat, onDefault: z.object({ type: z.string().brand("UNKNOWN") }).passthrough() });
     export const Pets = z.array(Pet).max(100);
 
     export module Types {
@@ -127,6 +171,11 @@ export module Schemas {
         export type Cat = z.infer<typeof Schemas.Cat>;
         export type Pet = z.infer<typeof Schemas.Pet>;
         export type Pets = z.infer<typeof Schemas.Pets>;
+    }
+
+
+    export module Unions {
+        export const Pet = z.union([Cat, Dog]);
     }
 
 }

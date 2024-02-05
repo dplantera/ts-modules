@@ -2,14 +2,16 @@ import { OpenApiBundled } from "../bundle.js";
 
 import { ComponentNode, Schema } from "./transpile-schema.js";
 import { Endpoint } from "./transpile-endpoint.js";
-import { Resolver } from "./resolver.js";
+import { Resolver } from "../resolver/index.js";
+import { SchemaGraph } from "./circular-schmeas.js";
 
 export interface TranspileContext {
   resolver: Resolver;
   schemas: Map<ComponentNode, Schema>;
   visited: Map<ComponentNode, ComponentNode>;
-  last: ComponentNode | undefined;
+  last: Set<ComponentNode>;
   endpoints: Array<Endpoint>;
+  graph: ReturnType<(typeof SchemaGraph)["createFromResolver"]>;
 
   clean(): TranspileContext;
 }
@@ -17,8 +19,10 @@ export interface TranspileContext {
 /** Resolving the oa spec just involves parsing and traversing openapi specified elements and components */
 export module TranspileContext {
   export function create(bundled: OpenApiBundled): TranspileContext {
+    const graph = SchemaGraph.createFromBundled(bundled);
     const resolver = Resolver.create(bundled);
     return {
+      graph,
       clean() {
         if (this.schemas) {
           this.schemas.forEach((s) => {
@@ -32,7 +36,7 @@ export module TranspileContext {
       resolver,
       visited: new Map(),
       schemas: new Map(),
-      last: undefined,
+      last: new Set(),
       endpoints: [],
     };
   }

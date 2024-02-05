@@ -4,7 +4,6 @@
 import { OpenApiBundled } from "../../bundle.js";
 import { Transpiler } from "../../transpiler/index.js";
 import { Schema } from "../../transpiler/transpile-schema.js";
-import assert from "node:assert";
 import { Project, ScriptKind, ts } from "ts-morph";
 import DiscriminatorProperty = Schema.DiscriminatorProperty;
 import { pascalCase } from "pascal-case";
@@ -17,20 +16,43 @@ import url from "url";
 
 const dirname = url.fileURLToPath(new URL(".", import.meta.url));
 const TEMPLATE_DIR = "../../../templates";
+// are being used to identify usecases
+const IDENTIFIER_API = "api";
 
-interface GenCtx {}
+export interface GenCtx {
+  includeTsTypes: boolean;
+}
 
-export async function generateZod(parsed: OpenApiBundled, filePath: string) {
+export async function generateZod(parsed: OpenApiBundled, filePath: string, params?: GenCtx) {
+  const options: GenCtx = {
+    includeTsTypes: true,
+    ...(params ?? {}),
+  };
   const transpiler = Transpiler.of(parsed);
   const schemas = transpiler.schemasTopoSorted();
   const components = schemas.filter((s) => s.component.kind === "COMPONENT");
   // we want to generate all components
   const imports = ["import { z } from 'zod'", "import * as zc from './zod-common.js'"];
-  const schemaDeclarations = components.map((c) => createConstantDeclaration(c, { useBigIntForLongNumberInt64: true }));
-  const typeDeclarations = components.map((c) => createTypeDeclaration(c, { useBigIntForLongNumberInt64: true }));
-  const schemaTypesModule = createModule("Types", typeDeclarations, {});
+  if (options.includeTsTypes) {
+    imports.push(`import * as ${IDENTIFIER_API} from './api.js'`);
+  }
+
+  const schemaDeclarations = components.map((c) => createConstantDeclaration(c, options));
+
+  // include types
+  const typeDeclarations = components.map((c) => createTypeDeclaration(c, options));
+  const schemaTypesModule = createModule("Types", typeDeclarations, options);
   schemaDeclarations.push(schemaTypesModule);
-  const schemasModule = createModule("Schemas", schemaDeclarations, {});
+
+  // include unions which can used for introspecting e.g. for test data generators
+  const unions = components.filter((c) => c.kind === "UNION");
+  if (unions.length > 0) {
+    const unionDeclarations = unions.map((c) => createUnionDeclaration(c, options));
+    const unionModule = createModule("Unions", unionDeclarations, options);
+    schemaDeclarations.push(unionModule);
+  }
+
+  const schemasModule = createModule("Schemas", schemaDeclarations, options);
   const source = [...imports, schemasModule].join("\n");
   const sourceSchema = createTsMorphSrcFile(filePath, source);
 
@@ -44,8 +66,34 @@ export async function generateZod(parsed: OpenApiBundled, filePath: string) {
 }
 
 function createConstantDeclaration(c: Schema, options: GenCtx) {
-  const declaration = `export const ${pascalCase(c.getName())}`;
+  const name = `${pascalCase(c.getName())}`;
+  const declaration = `export const ${name}`;
   const value = processSchema(c, options);
+  const isLazy = value.includes("z.lazy");
+  const isEnum = c.kind === "ENUM";
+  const isDiscriminated = c.kind === "UNION" && _.isDefined(c.discriminator);
+
+  if (options.includeTsTypes && (isDiscriminated || isEnum)) {
+    // todo: fix type inference for unknown values
+    return `${declaration} = ${value} as z.ZodType<${IDENTIFIER_API}.${name}>;`;
+  }
+  if (isLazy && options.includeTsTypes) {
+    return `${declaration}: z.ZodType<${IDENTIFIER_API}.${name}> = ${value};`;
+  }
+  if (isLazy) {
+    return `${declaration}: z.ZodTypeAny = ${value};`;
+  }
+  return `${declaration} = ${value};`;
+}
+// todo: refactor
+function createUnionDeclaration(c: Schema, options: GenCtx) {
+  if (c.kind !== "UNION") throw new Error(`expected schema to be of kind UNION but received ${c.kind}`);
+  const name = `${pascalCase(c.getName())}`;
+  const declaration = `export const ${name}`;
+  // remove discrminator to create normal unions
+  const cloned = _.cloneDeep(c);
+  delete cloned.discriminator;
+  const value = processSchema(cloned, options);
   return `${declaration} = ${value};`;
 }
 
@@ -75,9 +123,26 @@ function processSubSchema(c: Schema | DiscriminatorProperty, options: GenCtx, pa
     }
   }
 }
-
+function isCircular(c: Schema | DiscriminatorProperty) {
+  if (c.isCircular) {
+    return true;
+  }
+  switch (c.kind) {
+    case "UNION":
+      return c.schemas.some((s) => s.isCircular);
+    case "OBJECT":
+      return c.parent?.isCircular || c.properties.some((p) => p.isCircular);
+    case "ARRAY":
+      return c.items.isCircular;
+    case "BOX":
+    case "PRIMITIVE":
+    case "ENUM":
+    case "DISCRIMINATOR":
+      return c.isCircular;
+  }
+}
 function processSchema(c: Schema | DiscriminatorProperty, options: GenCtx): string {
-  return Factory.withLazy(c.isCircular ?? false, () => {
+  return Factory.withLazy(isCircular(c) ?? false, () => {
     switch (c.kind) {
       case "UNION": {
         if (_.isDefined(c.discriminator)) {
@@ -172,10 +237,6 @@ module Factory {
     return required ? fn() : `${fn()}.optional()`;
   }
 
-  export function withPassthrough(fn: () => string): string {
-    return `${fn()}.passthrough()`;
-  }
-
   export function createUnion(subSchemas: string[], options: GenCtx): string {
     return `z.union([${subSchemas.join(", ")}])`;
   }
@@ -183,12 +244,12 @@ module Factory {
   export function createDiscriminatedUnion(
     discriminatorProperty: string,
     mappings: Array<{ discriminatorValue: string; entityRef: string }>,
-    options: GenCtx,
+    options: GenCtx
   ): string {
     const matchProperties = mappings.map((p) => createObjectProperty(p.discriminatorValue, p.entityRef, options));
     // add unknown schema
-    matchProperties.push(`onDefault: z.object({ ${discriminatorProperty}: z.string().brand("UNKNOWN") })`);
-    return withPassthrough(() => `zc.ZodUnionMatch.matcher("${discriminatorProperty}", ${createObjectTs(matchProperties, options)})`);
+    matchProperties.push(`onDefault: z.object({ ${discriminatorProperty}: z.string().brand("UNKNOWN") }).passthrough()`);
+    return `zc.ZodUnionMatch.matcher("${discriminatorProperty}", ${createObjectTs(matchProperties, options)})`;
   }
 
   export function createObjectProperty(name: string, value: string, options: GenCtx): string {
