@@ -3,7 +3,7 @@ import { _ } from "@dsp/node-sdk";
 import { oas30 } from "openapi3-ts";
 import { isRef } from "@redocly/openapi-core";
 import { childLog } from "../../logger.js";
-import { DeepSchemaResolverContext, DeepSchemaResolver } from "../../transpiler/resolver-deep.js";
+import { SchemaResolverContext } from "../../resolver/index.js";
 
 export function ensureDiscriminatorValues(bundled: OpenApiBundled) {
   const oneOfSchemas = findSchemaObjectsWithOneOf(bundled);
@@ -24,7 +24,7 @@ function ensureRequired(resolvedParent: oas30.SchemaObject, propertyName: string
   }
 }
 
-function ensure(schema: oas30.SchemaObject, ctx: DeepSchemaResolverContext) {
+function ensure(schema: oas30.SchemaObject, ctx: SchemaResolverContext) {
   const discriminator = schema.discriminator;
   if (_.isNil(discriminator)) {
     // no discriminator
@@ -36,7 +36,7 @@ function ensure(schema: oas30.SchemaObject, ctx: DeepSchemaResolverContext) {
   }
 
   Object.entries(mapping).forEach(([key, value]) => {
-    const subSchema = ctx.resolveRef({ $ref: value });
+    const subSchema = ctx.resolver.resolveRef({ $ref: value });
 
     const { prop: resolvedDiscriminatorProp, subSchema: resolvedParent } = findDiscriminatorProperty(subSchema, propertyName, ctx) ?? {};
     const discriminatorProp = selectDiscriminatorProperty(subSchema, propertyName, ctx);
@@ -92,18 +92,18 @@ function ensureDiscriminator(discriminatorProperty: oas30.SchemaObject, key: str
 function findDiscriminatorProperty(
   subSchema: oas30.SchemaObject,
   propertyName: string,
-  ctx: DeepSchemaResolverContext
+  ctx: SchemaResolverContext
 ): { prop: oas30.SchemaObject | undefined; subSchema: oas30.SchemaObject } | undefined {
   const property = subSchema.properties?.[propertyName];
   if (!_.isEmpty(property)) {
-    return isRef(property) ? { prop: ctx.resolveRef(property), subSchema } : { prop: property, subSchema };
+    return isRef(property) ? { prop: ctx.resolver.resolveRef(property), subSchema } : { prop: property, subSchema };
   }
   if (!_.isEmpty(subSchema.allOf)) {
-    const resolved = subSchema.allOf?.map((s) => ctx.resolveRef(s)) ?? [];
+    const resolved = subSchema.allOf?.map((s) => ctx.resolver.resolveRef(s)) ?? [];
     return resolved.map((s) => findDiscriminatorProperty(s, propertyName, ctx)).filter(_.isDefined)[0];
   }
   if (!_.isEmpty(subSchema.oneOf)) {
-    const resolved = subSchema.oneOf?.map((s) => ctx.resolveRef(s)) ?? [];
+    const resolved = subSchema.oneOf?.map((s) => ctx.resolver.resolveRef(s)) ?? [];
     return resolved.map((s) => findDiscriminatorProperty(s, propertyName, ctx)).filter(_.isDefined)[0];
   }
   return undefined;
@@ -112,7 +112,7 @@ function findDiscriminatorProperty(
 function selectDiscriminatorProperty(
   subSchema: oas30.SchemaObject,
   propertyName: string,
-  ctx: DeepSchemaResolverContext,
+  ctx: SchemaResolverContext,
   params: { resolveRefs: boolean } = { resolveRefs: true }
 ): { src: "properties" | "allOf" | "oneOf"; property: oas30.SchemaObject | undefined } {
   if (!_.isEmpty(subSchema.properties)) {
@@ -127,7 +127,9 @@ function selectDiscriminatorProperty(
 
   function selectPropertyFrom(subschemas: Array<oas30.SchemaObject | oas30.ReferenceObject> | undefined) {
     const isSchema = (a: oas30.SchemaObject | oas30.ReferenceObject): a is oas30.SchemaObject => !isRef(a);
-    const resolved: Array<oas30.SchemaObject> | undefined = params.resolveRefs ? subschemas?.map((s) => ctx.resolveRef(s)) ?? [] : subschemas?.filter(isSchema);
+    const resolved: Array<oas30.SchemaObject> | undefined = params.resolveRefs
+      ? subschemas?.map((s) => ctx.resolver.resolveRef(s)) ?? []
+      : subschemas?.filter(isSchema);
     const resolvedWithDiscriminator = resolved?.find((r) => !_.isEmpty(r.properties?.[propertyName]));
     return selectProperty(resolvedWithDiscriminator);
   }
@@ -135,7 +137,7 @@ function selectDiscriminatorProperty(
   function selectProperty(resolvedWithDiscriminator: oas30.SchemaObject | undefined) {
     const property = resolvedWithDiscriminator?.properties?.[propertyName];
     if (isRef(property)) {
-      return params.resolveRefs ? ctx.resolveRef(property) : undefined;
+      return params.resolveRefs ? ctx.resolver.resolveRef(property) : undefined;
     }
     return property;
   }
@@ -145,15 +147,8 @@ function selectDiscriminatorProperty(
   )}`;
 }
 
-function setDiscriminatorProperty(subSchema: oas30.SchemaObject, propertyName: string, value: oas30.SchemaObject, ctx: DeepSchemaResolverContext): void {
+function setDiscriminatorProperty(subSchema: oas30.SchemaObject, propertyName: string, value: oas30.SchemaObject, ctx: SchemaResolverContext): void {
   const prop = selectDiscriminatorProperty(subSchema, propertyName, ctx, { resolveRefs: false });
-  // if (!_.isEmpty(prop.property)) {
-  //   // setting existing discriminator
-  //   ensureRequired(subSchema, propertyName);
-  //   Object.assign(cleanObj(prop.property, []), value);
-  //   return;
-  // }
-
   // new discriminator
   switch (prop.src) {
     case "properties":
@@ -180,7 +175,7 @@ function setDiscriminatorProperty(subSchema: oas30.SchemaObject, propertyName: s
     case "oneOf":
       // we need to set discriminator on every oneOf subschema (recursive, if we allow nested)
       subSchema.oneOf?.forEach((o) => {
-        const prop = ctx.resolveRef(o);
+        const prop = ctx.resolver.resolveRef(o);
         setDiscriminatorProperty(prop, propertyName, value, ctx);
       });
       break;
@@ -188,5 +183,7 @@ function setDiscriminatorProperty(subSchema: oas30.SchemaObject, propertyName: s
 }
 
 function findSchemaObjectsWithOneOf(bundled: OpenApiBundled) {
-  return DeepSchemaResolver.findSchemaObjectsWith(bundled, (node) => _.isDefined(node.oneOf));
+  const transpiler = SchemaResolverContext.create(bundled);
+  const collected = transpiler.schemas.filter((s) => !_.isEmpty(s.oneOf));
+  return { collected, ctx: transpiler };
 }

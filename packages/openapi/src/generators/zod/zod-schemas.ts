@@ -75,9 +75,26 @@ function processSubSchema(c: Schema | DiscriminatorProperty, options: GenCtx, pa
     }
   }
 }
-
+function isCircular(c: Schema | DiscriminatorProperty) {
+  if (c.isCircular) {
+    return true;
+  }
+  switch (c.kind) {
+    case "UNION":
+      return c.schemas.some((s) => s.isCircular);
+    case "OBJECT":
+      return c.parent?.isCircular || c.properties.some((p) => p.isCircular);
+    case "ARRAY":
+      return c.items.isCircular;
+    case "BOX":
+    case "PRIMITIVE":
+    case "ENUM":
+    case "DISCRIMINATOR":
+      return c.isCircular;
+  }
+}
 function processSchema(c: Schema | DiscriminatorProperty, options: GenCtx): string {
-  return Factory.withLazy(c.isCircular ?? false, () => {
+  return Factory.withLazy(isCircular(c) ?? false, () => {
     switch (c.kind) {
       case "UNION": {
         if (_.isDefined(c.discriminator)) {
@@ -183,7 +200,7 @@ module Factory {
   export function createDiscriminatedUnion(
     discriminatorProperty: string,
     mappings: Array<{ discriminatorValue: string; entityRef: string }>,
-    options: GenCtx,
+    options: GenCtx
   ): string {
     const matchProperties = mappings.map((p) => createObjectProperty(p.discriminatorValue, p.entityRef, options));
     // add unknown schema

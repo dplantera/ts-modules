@@ -7,35 +7,10 @@ import { _ } from "@dsp/node-sdk";
 import { SetRequired } from "type-fest";
 import assert from "node:assert";
 import { TranspileContext } from "./transpile-context.js";
-import { log } from "../logger.js";
-
-export type OaComponent =
-  | oas30.SchemaObject
-  | oas30.ResponseObject
-  | oas30.ParameterObject
-  | oas30.ExampleObject
-  | oas30.RequestBodyObject
-  | oas30.HeaderObject
-  | oas30.SecuritySchemeObject
-  | oas30.CallbackObject
-  | oas30.ISpecificationExtension;
+import { OaComponent, SchemaObjectFormat } from "../resolver/index.js";
 
 export type ComponentNode = OaComponent | undefined | { [key: string]: ComponentNode };
-type SchemaObjectFormat = "int32" | "int64" | "float" | "double" | "byte" | "binary" | "date" | "date-time" | "password" | (string & Record<never, never>);
-
 export type Schema = Schema.OaObject | Schema.Union | Schema.Primitive | Schema.OaEnum | Schema.OaArray | Schema.Box;
-
-function resolveSchema(oa: oas30.SchemaObject | oas30.ReferenceObject, ctx: TranspileContext) {
-  const schema = ctx.resolver.resolveRefOptional(oa);
-
-  // assert invariants
-  assert(_.isDefined(schema), `expected resolvable schema but received: ${JSON.stringify(oa)}`);
-  if (_.isDefined(schema.type)) {
-    assert(typeof schema.type === "string", `expected schema.type to be of type string but received: ${JSON.stringify(schema.type)}`);
-  }
-  assert(_.isNil(schema.anyOf), `schema.anyOf currently is not supported please migrate to oneOf: ${JSON.stringify(schema.type)}`);
-  return schema;
-}
 
 export module Schema {
   export interface Component {
@@ -92,10 +67,10 @@ export module Schema {
     ? T extends "number" | "integer"
       ? number
       : T extends "boolean"
-        ? boolean
-        : T extends "array"
-          ? object
-          : string
+      ? boolean
+      : T extends "array"
+      ? object
+      : string
     : string;
 
   interface EnumLike<T extends Primitive["type"] = Primitive["type"]> {
@@ -152,7 +127,7 @@ export module Schema {
     raw: oas30.SchemaObject & OaObject["raw"],
     component: Component | Inline,
     properties?: OaObject["properties"],
-    parent?: OaObject["parent"],
+    parent?: OaObject["parent"]
   ): OaObject {
     return {
       type: raw.type !== "object" ? "object" : raw.type,
@@ -193,20 +168,6 @@ export module Schema {
       raw,
       getName() {
         return getComponentName(this.component);
-      },
-    };
-  }
-
-  export function box(raw: oas30.SchemaObject): Box {
-    return {
-      kind: "BOX",
-      raw,
-      schema: undefined,
-      component: { kind: "INLINE", name: "{{BOXED}}" },
-      required: false,
-      type: "object",
-      getName() {
-        return "{{BOXED}}";
       },
     };
   }
@@ -254,6 +215,10 @@ export module Schema {
     return schema.type === "object" || _.isDefined(schema.properties);
   }
 
+  export function isAnyObject(schema: oas30.SchemaObject): schema is OaObject["raw"] {
+    return typeof schema === "object";
+  }
+
   export function isExtendedOaObject(schema: oas30.SchemaObject): schema is SetRequired<OaObject["raw"], "allOf"> {
     return _.isDefined(schema.allOf) && schema.allOf.filter((a) => !_.isEmpty(a)).length > 0;
   }
@@ -264,7 +229,7 @@ export module Schema {
     assert(isPrimitiveOa(schema), `expected enum schema to be a primitive type but received: ${JSON.stringify(schema.type)}`);
     assert(
       schema.enum?.every((e) => isPrimitiveJs(typeof e)),
-      `expected enum array to only contain primitive types but received: ${JSON.stringify(schema)}`,
+      `expected enum array to only contain primitive types but received: ${JSON.stringify(schema)}`
     );
     return true;
   }
@@ -273,7 +238,7 @@ export module Schema {
     schema: Schema,
     discriminatorValue: string,
     propertyName: string,
-    unionSchema: Schema.Union,
+    unionSchema: Schema.Union
   ): Array<DiscriminatorProperty> {
     switch (schema.kind) {
       case "UNION":
@@ -329,7 +294,7 @@ export module Schema {
     if (ctx.schemas.has(schema)) {
       const cachedSchema = ctx.schemas.get(schema);
       assert(_.isDefined(cachedSchema), `expected to find cached transpiled schema for: ${JSON.stringify(schema)}`);
-      cachedSchema.isCircular = ctx.last && (cachedSchema.isCircular || ctx.last === schema);
+      cachedSchema.isCircular = ctx.graph.isCircular(schema);
       return cachedSchema;
     }
 
@@ -338,9 +303,9 @@ export module Schema {
       return s;
     }
     function withMemory<T>(fn: () => T): T {
-      ctx.last = schema;
+      ctx.last.add(schema);
       const ret = fn();
-      ctx.last = undefined;
+      ctx.last.clear();
       return ret;
     }
     const component: Base["component"] = isComponent(schema) ? { kind: "COMPONENT", id: schema["::ref"] } : { kind: "INLINE", name };
@@ -365,7 +330,7 @@ export module Schema {
         const subSchema = groupedSchemas[mapRef][0];
         assert(
           _.isDefined(subSchema),
-          `expected discriminator mapping subschema to be a oneOf subschema ${discriminatorValue}, ${mapRef}: ${JSON.stringify(schema)}`,
+          `expected discriminator mapping subschema to be a oneOf subschema ${discriminatorValue}, ${mapRef}: ${JSON.stringify(schema)}`
         );
 
         ensureDiscriminator(subSchema, discriminatorValue, schema.discriminator!.propertyName, unionSchema);
@@ -380,7 +345,7 @@ export module Schema {
     }
 
     if (isOaArray(schema)) {
-      const arraySchema = addSchema(oaArray(schema, component, box(schema)));
+      const arraySchema = addSchema(oaArray(schema, component, oaObject(schema, component)));
       arraySchema.items = withMemory(() => transpileRecursive(`${name}_item`, schema.items, ctx));
       return arraySchema;
     }
@@ -388,32 +353,30 @@ export module Schema {
     if (isExtendedOaObject(schema)) {
       assert(
         schema.allOf.length <= 2,
-        `transpiler supports allOf.length of max 2. Consider pre-processing with a bundler which supports merging allOf':  ${JSON.stringify(schema)}`,
+        `transpiler supports allOf.length of max 2. Consider pre-processing with a bundler which supports merging allOf':  ${JSON.stringify(schema)}`
       );
-      const boxed = box(schema);
-      addSchema(boxed);
+      const extendedSchema = addSchema(oaObject(schema, component));
       const allOfCleaned = schema.allOf.filter((e) => !_.isEmpty(e));
       const subSchemas = allOfCleaned.map((s, idx) => withMemory(() => transpileRecursive(`${name}_sub_${idx}`, s, ctx)));
       // todo: this is an issue/workaround for the bundler... it created an allOf with an empty array element for generic api
       if (subSchemas.length === 1) {
         const subSchema = subSchemas[0];
         subSchema.component = component.kind === "COMPONENT" ? component : subSchema.component;
-        return subSchema;
+        return addSchema(subSchema);
       }
 
       const [parent, _schema] = subSchemas;
-      boxed.schema = _schema;
-      assert(_schema.kind === "OBJECT", `expected subschema of extended schema to be of type object'${name}':  ${JSON.stringify(schema)}`);
+      Object.assign(extendedSchema, _schema);
+      assert(extendedSchema.kind === "OBJECT", `expected subschema of extended schema to be of type object'${name}':  ${JSON.stringify(schema)}`);
       assert(
         parent.kind === "OBJECT" && parent.component.kind === "COMPONENT",
-        `expected parent subschema of extended schema to be of a schema component '${name}':  ${JSON.stringify(schema)}`,
+        `expected parent subschema of extended schema to be of a schema component '${name}':  ${JSON.stringify(schema)}`
       );
       // the schema may be a component which we split up here in child and parent. But we must ensure the component semantic for that schema.
-      _schema.component = component.kind === "COMPONENT" ? component : _schema.component;
+      extendedSchema.component = component.kind === "COMPONENT" ? component : extendedSchema.component;
       // component needs to be defined to satisfy typescript - too nested
-      _schema.parent = { ...parent, component: parent.component };
-      addSchema(boxed.schema);
-      return boxed.schema;
+      extendedSchema.parent = { ...parent, component: parent.component };
+      return extendedSchema;
     }
 
     if (isOaObject(schema)) {
@@ -428,14 +391,27 @@ export module Schema {
       });
       return schemaObject;
     }
-    throw new Error(`could not transpile schema '${name}':  ${JSON.stringify(schema)}`);
+    if (isAnyObject(schema)) {
+      return addSchema(oaObject(schema, component, []));
+    }
+    throw new Error(`cant transpile schema '${name}':  ${JSON.stringify(schema)}`);
+  }
+
+  function resolveSchema(oa: oas30.SchemaObject | oas30.ReferenceObject, ctx: TranspileContext) {
+    const schema = ctx.resolver.resolveRefOptional(oa);
+
+    // assert invariants
+    assert(_.isDefined(schema), `expected resolvable schema but received: ${JSON.stringify(oa)}`);
+    if (_.isDefined(schema.type)) {
+      assert(typeof schema.type === "string", `expected schema.type to be of type string but received: ${JSON.stringify(schema.type)}`);
+    }
+    assert(_.isNil(schema.anyOf), `schema.anyOf currently is not supported please migrate to oneOf: ${JSON.stringify(schema.type)}`);
+    return schema;
   }
 
   export function transpile(name: string, oa: oas30.SchemaObject | oas30.ReferenceObject, ctx: TranspileContext): Schema {
     const schema = resolveSchema(oa, ctx);
-    const transpiled = transpileRecursive(name, schema, ctx);
-    log.info("transpiled");
-    return transpiled;
+    return transpileRecursive(name, schema, ctx);
   }
 
   export function transpileAll(ctx: TranspileContext) {

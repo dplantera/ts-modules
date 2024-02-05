@@ -56,7 +56,6 @@
     "handlebars": "^4.7.8"
   },
   "devDependencies": {
-    "@types/prettier": "^3.0.0",
     "@redocly/cli": "^1.6.0",
     "@types/pascal-case": "^1.1.2",
     "@types/json-schema-merge-allof": "^0.6.5",

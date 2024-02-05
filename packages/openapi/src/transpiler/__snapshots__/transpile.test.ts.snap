@@ -4230,7 +4230,7 @@ exports[`transpiler transpile test/specs/generic/api.yml: endpoints 1`] = `
           },
           "format": undefined,
           "getName": [Function],
-          "isCircular": undefined,
+          "isCircular": false,
           "items": {
             "component": {
               "id": "#/components/schemas/Pet",
@@ -7355,7 +7355,7 @@ exports[`transpiler transpile test/specs/generic/api.yml: endpoints 1`] = `
               "name": "type",
             },
             "getName": [Function],
-            "isCircular": undefined,
+            "isCircular": false,
             "kind": "UNION",
             "raw": {
               "::ref": "#/components/schemas/Pet",
@@ -11482,7 +11482,7 @@ exports[`transpiler transpile test/specs/generic/api.yml: endpoints 1`] = `
             "name": "type",
           },
           "getName": [Function],
-          "isCircular": undefined,
+          "isCircular": false,
           "kind": "UNION",
           "raw": {
             "::ref": "#/components/schemas/Pet",
@@ -50606,7 +50606,7 @@ exports[`transpiler transpile test/specs/pets-modular/pets-api.yml: endpoints 1`
             "name": "type",
           },
           "getName": [Function],
-          "isCircular": undefined,
+          "isCircular": false,
           "kind": "UNION",
           "raw": {
             "::ref": "#/components/schemas/Pet",
@@ -54524,7 +54524,7 @@ exports[`transpiler transpile test/specs/pets-modular-complex/petstore-api.yml: 
           },
           "format": undefined,
           "getName": [Function],
-          "isCircular": undefined,
+          "isCircular": false,
           "kind": "PRIMITIVE",
           "raw": {
             "type": "string",
@@ -54552,14 +54552,14 @@ exports[`transpiler transpile test/specs/pets-modular-complex/petstore-api.yml: 
           },
           "format": undefined,
           "getName": [Function],
-          "isCircular": undefined,
+          "isCircular": false,
           "items": {
             "component": {
               "id": "#/components/schemas/Pet",
               "kind": "COMPONENT",
             },
             "getName": [Function],
-            "isCircular": undefined,
+            "isCircular": false,
             "kind": "OBJECT",
             "parent": undefined,
             "properties": [
@@ -55782,7 +55782,7 @@ exports[`transpiler transpile test/specs/pets-modular-complex/petstore-api.yml: 
           },
           "format": undefined,
           "getName": [Function],
-          "isCircular": undefined,
+          "isCircular": false,
           "kind": "PRIMITIVE",
           "raw": {
             "type": "string",
@@ -55809,7 +55809,7 @@ exports[`transpiler transpile test/specs/pets-modular-complex/petstore-api.yml: 
             "kind": "COMPONENT",
           },
           "getName": [Function],
-          "isCircular": undefined,
+          "isCircular": false,
           "kind": "OBJECT",
           "parent": undefined,
           "properties": [
@@ -67792,7 +67792,7 @@ exports[`transpiler transpile test/specs/pets-simple/pets-api.yml: endpoints 1`]
           },
           "format": undefined,
           "getName": [Function],
-          "isCircular": undefined,
+          "isCircular": false,
           "items": {
             "component": {
               "id": "#/components/schemas/Pet",
