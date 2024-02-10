@@ -366,8 +366,8 @@ function fooPetNested(pet: Pet): any {
 - ✅ support of nested (discriminated) unions
 - ✅ support **unknown enum variant**
 - ✅ support of circular (lazy) schemas
-- 🔲 support types for lazy schemas
-- 🔲 support for deeply nested recursive schemas 
+- ✅ support types for lazy schemas
+- ✅ support for deeply nested recursive schemas 
 
 [complex-petstore-src]: ./test/specs/pets-modular-complex/petstore-api.yml
 

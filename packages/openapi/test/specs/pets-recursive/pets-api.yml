@@ -24,10 +24,13 @@ paths:
 components:
   schemas:
     Pets:
-      type: array
-      maxItems: 100
-      items:
-        $ref: "#/components/schemas/Pet"
+      type: object
+      properties:
+        pets:
+          type: array
+          maxItems: 100
+          items:
+            $ref: "#/components/schemas/Pet"
 
     Pet:
       oneOf:
@@ -36,8 +39,8 @@ components:
       discriminator:
         propertyName: type
         mapping:
-          DOG: '#/components/schemas/Cat'
-          CAT: '#/components/schemas/Dog'
+          CAT: '#/components/schemas/Cat'
+          DOG: '#/components/schemas/Dog'
 
     PetBase:
       type: object
