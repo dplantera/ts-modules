@@ -19,7 +19,7 @@ export async function bundleOpenapi(_pathToApi: string, params?: Partial<BundleO
   const bundleResults = await parseOpenapi(inputFile.absolutPath);
   const parsed: OpenApiBundled = _.isNil(postProcessor) ? bundleResults.bundle.parsed : postProcessor(bundleResults.bundle.parsed);
   // todo: CatBase in generic does not get cleaned up...
-  const cleanedParsed = _.isNil(postProcessor) ? parsed : (await doBundle(bundleResults.bundle.source, parsed)).bundle.parsed;
+  const cleanedParsed: OpenApiBundled = _.isNil(postProcessor) ? parsed : (await doBundle(bundleResults.bundle.source, parsed)).bundle.parsed;
 
   // todo: investigate - for pets-simple it will duplicate schemas...
   if (_.isDefined(parsed.components?.schemas?.["schemas"])) {

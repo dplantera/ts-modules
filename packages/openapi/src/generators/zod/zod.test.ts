@@ -1,9 +1,9 @@
 import { bundleOpenapi, OpenApiBundled } from "../../bundle.js";
 import { createSpecProcessor } from "../../post-process/index.js";
-import { GenCtx, generateZod } from "./zod-schemas.js";
+import { ZodGenOptions, generateZod } from "./zod-schemas.js";
 import { oas30 } from "openapi3-ts";
 
-const options: () => GenCtx = () => ({
+const options: () => ZodGenOptions = () => ({
   includeTsTypes: false,
 });
 describe("generateZod", () => {

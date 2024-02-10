@@ -19,12 +19,12 @@ const TEMPLATE_DIR = "../../../templates";
 // are being used to identify usecases
 const IDENTIFIER_API = "api";
 
-export interface GenCtx {
+export interface ZodGenOptions {
   includeTsTypes: boolean;
 }
 
-export async function generateZod(parsed: OpenApiBundled, filePath: string, params?: GenCtx) {
-  const options: GenCtx = {
+export async function generateZod(parsed: OpenApiBundled, filePath: string, params?: ZodGenOptions) {
+  const options: ZodGenOptions = {
     includeTsTypes: true,
     ...(params ?? {}),
   };
@@ -65,7 +65,7 @@ export async function generateZod(parsed: OpenApiBundled, filePath: string, para
   return sourceSchema;
 }
 
-function createConstantDeclaration(c: Schema, options: GenCtx) {
+function createConstantDeclaration(c: Schema, options: ZodGenOptions) {
   const name = `${pascalCase(c.getName())}`;
   const declaration = `export const ${name}`;
   const value = processSchema(c, options);
@@ -86,7 +86,7 @@ function createConstantDeclaration(c: Schema, options: GenCtx) {
   return `${declaration} = ${value};`;
 }
 // todo: refactor
-function createUnionDeclaration(c: Schema, options: GenCtx) {
+function createUnionDeclaration(c: Schema, options: ZodGenOptions) {
   if (c.kind !== "UNION") throw new Error(`expected schema to be of kind UNION but received ${c.kind}`);
   const name = `${pascalCase(c.getName())}`;
   const declaration = `export const ${name}`;
@@ -97,13 +97,13 @@ function createUnionDeclaration(c: Schema, options: GenCtx) {
   return `${declaration} = ${value};`;
 }
 
-function createTypeDeclaration(c: Schema, options: GenCtx) {
+function createTypeDeclaration(c: Schema, options: ZodGenOptions) {
   const declaration = `export type ${pascalCase(c.getName())}`;
   const value = Factory.createInferredType(c, options);
   return `${declaration} = ${value};`;
 }
 
-function createModule(name: string, members: string[], options: GenCtx) {
+function createModule(name: string, members: string[], options: ZodGenOptions) {
   return `
 export module ${name} {
     ${members.join("\n")}
@@ -111,7 +111,7 @@ export module ${name} {
   `;
 }
 
-function processSubSchema(c: Schema | DiscriminatorProperty, options: GenCtx, params?: { withOptionalEntityRef?: boolean }) {
+function processSubSchema(c: Schema | DiscriminatorProperty, options: ZodGenOptions, params?: { withOptionalEntityRef?: boolean }) {
   switch (c.component.kind) {
     case "INLINE":
       return Factory.withOptional(c.required, () => processSchema(c, options));
@@ -141,7 +141,7 @@ function isCircular(c: Schema | DiscriminatorProperty) {
       return c.isCircular;
   }
 }
-function processSchema(c: Schema | DiscriminatorProperty, options: GenCtx): string {
+function processSchema(c: Schema | DiscriminatorProperty, options: ZodGenOptions): string {
   return Factory.withLazy(isCircular(c) ?? false, () => {
     switch (c.kind) {
       case "UNION": {
@@ -225,11 +225,11 @@ module Factory {
   export function withLazy(condition: boolean, fn: () => string): string {
     return condition ? `z.lazy(() => ${fn()})` : fn();
   }
-  export function createInferredType(c: Schema | DiscriminatorProperty, options: GenCtx) {
+  export function createInferredType(c: Schema | DiscriminatorProperty, options: ZodGenOptions) {
     return `z.infer<typeof Schemas.${createEntityRef(c, options)}>`;
   }
 
-  export function createEntityRef(c: Schema | DiscriminatorProperty, options: GenCtx) {
+  export function createEntityRef(c: Schema | DiscriminatorProperty, options: ZodGenOptions) {
     return `${pascalCase(c.getName())}`;
   }
 
@@ -237,14 +237,14 @@ module Factory {
     return required ? fn() : `${fn()}.optional()`;
   }
 
-  export function createUnion(subSchemas: string[], options: GenCtx): string {
+  export function createUnion(subSchemas: string[], options: ZodGenOptions): string {
     return `z.union([${subSchemas.join(", ")}])`;
   }
 
   export function createDiscriminatedUnion(
     discriminatorProperty: string,
     mappings: Array<{ discriminatorValue: string; entityRef: string }>,
-    options: GenCtx
+    options: ZodGenOptions
   ): string {
     const matchProperties = mappings.map((p) => createObjectProperty(p.discriminatorValue, p.entityRef, options));
     // add unknown schema
@@ -252,20 +252,20 @@ module Factory {
     return `zc.ZodUnionMatch.matcher("${discriminatorProperty}", ${createObjectTs(matchProperties, options)})`;
   }
 
-  export function createObjectProperty(name: string, value: string, options: GenCtx): string {
+  export function createObjectProperty(name: string, value: string, options: ZodGenOptions): string {
     return `${name}: ${value}`;
   }
 
-  export function createObject(properties: string[], parent: string | undefined, options: GenCtx): string {
+  export function createObject(properties: string[], parent: string | undefined, options: ZodGenOptions): string {
     const obj = `z.object(${createObjectTs(properties, options)})`;
     return _.isDefined(parent) ? `${parent}.merge(${obj})` : obj;
   }
 
-  export function createObjectTs(properties: string[], options: GenCtx): string {
+  export function createObjectTs(properties: string[], options: ZodGenOptions): string {
     return `{${properties.join(", ")}}`;
   }
 
-  export function createPrimitive(c: Schema.Primitive, options: GenCtx): string {
+  export function createPrimitive(c: Schema.Primitive, options: ZodGenOptions): string {
     switch (c.type) {
       case "integer":
         return `z.number().int()`;
@@ -278,7 +278,7 @@ module Factory {
     }
   }
 
-  export function createEnum(values: string[], options: GenCtx): string {
+  export function createEnum(values: string[], options: ZodGenOptions): string {
     function withUnknownVariant(value: string) {
       return `${value}.or(z.string().brand("UNKNOWN"))`;
     }
@@ -286,11 +286,11 @@ module Factory {
     return withUnknownVariant(`z.enum([${values.map(stringify).join(",")}])`);
   }
 
-  export function createArray(item: string, options: GenCtx): string {
+  export function createArray(item: string, options: ZodGenOptions): string {
     return `z.array(${item})`;
   }
 
-  export function createDiscriminator(values: string[], options: GenCtx): string {
+  export function createDiscriminator(values: string[], options: ZodGenOptions): string {
     if (values.length <= 1) {
       return literal(values[0]);
     }
@@ -302,7 +302,7 @@ module Factory {
     return `z.literal(${stringify(value)})`;
   }
 
-  export function withConstraintsAware(schema: Schema, value: string, options: GenCtx) {
+  export function withConstraintsAware(schema: Schema, value: string, options: ZodGenOptions) {
     const constraints: Constraints = schema.raw;
     const isExclusiveMin = constraints.exclusiveMinimum;
     const isExclusiveMax = constraints.exclusiveMaximum;
@@ -334,7 +334,7 @@ module Factory {
     }, value);
   }
 
-  export function stringFormatAware(c: Schema.Primitive, numberValue: string, options: GenCtx): string {
+  export function stringFormatAware(c: Schema.Primitive, numberValue: string, options: ZodGenOptions): string {
     switch (c.format) {
       case "int64":
         // todo: feat: support bigint for string + int64 format
@@ -366,7 +366,7 @@ module Factory {
     }
   }
 
-  export function numberFormatAware(c: Schema.Primitive, numberValue: string, options: GenCtx): string {
+  export function numberFormatAware(c: Schema.Primitive, numberValue: string, options: ZodGenOptions): string {
     switch (c.format) {
       case "int64":
       case "int32":

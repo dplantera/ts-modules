@@ -7,8 +7,13 @@ import { childLog } from "../logger.js";
 
 const dirname = url.fileURLToPath(new URL(".", import.meta.url));
 const TEMPLATE_DIR = "../../templates";
-
-export function generateTypescriptAxios(openapiSpec: string, out: string, params?: { postProcessor?: (api: string) => string; generateZod?: boolean }) {
+export interface TsAxiosPublicGenOptions {
+  generateZod?: boolean;
+}
+export interface TsAxiosInternalOptions extends TsAxiosPublicGenOptions {
+  postProcessor?: (api: string) => string;
+}
+export function generateTypescriptAxios(openapiSpec: string, out: string, params?: TsAxiosInternalOptions) {
   childLog(generateTypescriptAxios).info(`start generate:`, openapiSpec, out);
 
   const outDir = path.isAbsolute(out) ? out : path.resolve(process.cwd(), out);
