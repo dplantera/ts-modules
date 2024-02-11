@@ -1,0 +1,42 @@
+C4Context
+    title System Context diagram for Internet Banking System
+
+    Enterprise_Boundary(baufi_platform, "Baufi Platform") {
+
+        Enterprise_Boundary(financing, "Financing") {
+            System(view_start_to_funding, "From Start to Funding", $type="view")
+            SystemDb(financing, "Financing Data", $sprite="img:http://plantuml.com/logo3.png")
+
+            Rel(view_start_to_funding, financing, "uses")
+        }
+
+        Enterprise_Boundary(financing, "Financing") {
+
+            System(product_search, "Product Search")
+            System(view_market, "Market", $type="view")
+
+            Rel(view_market, product_search, "interacts")
+            Rel(view_market, financing, "interacts")
+            Rel(view_market, view_offers, "interacts")
+        }
+
+        Enterprise_Boundary(submission, "Submission") {
+            System(offer_submission, "Offer Submission")
+            System(view_offers, "Offers", $type="view")
+
+            Rel(view_offers, offer_submission, "uses")
+            Rel(view_offers, financing, "uses")
+        }
+
+
+
+        BiRel(offer_submission, provider_system, "exchange")
+        Rel(offer_submission, financing, "uses")
+        Rel(product_search, financing, "uses")
+    }
+
+    Boundary(provider, "Provider") {
+        System(provider_system, "Provider System")
+    }
+
+    UpdateLayoutConfig($c4ShapeInRow="4", $c4BoundaryInRow="2")

@@ -1,0 +1,61 @@
+%%@formatter:off
+sequenceDiagram
+    activate User
+        User ->> Variant: getVariants(intentId)
+        activate Variant
+            Variant ->> Intent: getIntent(intentId)
+            Variant -->> User: getVariants: Variant[]
+        deactivate Variant
+        User ->> Calculation: calculateVariant(variantId): CommandId
+            activate Calculation
+            Calculation ->> Variant: getVariant(variantId): Variant
+            Calculation ->> Intent: getIntent(intentId): Intent
+            Calculation ->> Calculation: createFinancingRequest(Intent, Variant)
+            Calculation ->> Calculation: calculate($financingRequest):CommandId
+            User ->> Calculation: getResults(CommandId)
+            Calculation -->> User: getResults(CommandId): Result[]
+            deactivate Calculation
+        User ->> Offer: createOffer(intentId, variantId, calculationId)
+        activate Offer
+            Offer ->> Intent: saveSnapshot(intentId): 'intentId
+            Offer ->> Variant: saveSnapshot(variantId): 'variantId
+            Offer ->> Calculation: saveSnapshot(calculationId): 'calculationId
+            Offer ->> Offer: createOffer('intentId, 'variantId, 'calculationId): Offer
+            Offer -->> User: createOffer: Offer
+        deactivate Offer
+        User ->> Offer: acceptOffer(offerId)
+        activate Offer
+            Offer ->> Offer: changeStatus
+            Offer -->> User: acceptOffer: OfferId
+        deactivate Offer
+        User ->> Offer: submit(offerId): STATUS_PENDING
+        activate Offer
+            Offer -) Submission: Event: SubmissionRequested('intentId, 'variantId, 'calculationId, 'offerId)
+    deactivate Offer
+    activate Submission
+    Submission ->> Offer: getOffer('offerId)
+    Submission ->> Calculation: getCalculation('calculationId): Calculation
+    Submission ->> Intent: getIntent('intentId): Intent
+    Submission ->> Variant: getVariant('variantId): Variant
+    Submission ->> Submission: createSubmission(Intent, Variant, Calculation): Submission
+    Submission ->> Submission: validateSubmission('variantId): Variant
+
+    alt valid
+        Submission -) Offer: Event: SubmissionCreated(offerId): submissionId
+        activate Offer
+        Offer ->> Offer: changeStatus: Submitted
+        deactivate Offer
+    else invalid
+        Submission -) Offer: Event: SubmissionRejected { 'INVALID', Issues }
+        deactivate Submission
+        activate Offer
+        Offer ->> Offer: changeStatus: Prüfung Notwendig
+        deactivate Offer
+    end
+    activate Offer
+        Offer -) User: Event: StatusChanged(offerId): Status
+    deactivate Offer
+
+
+
+    deactivate User

@@ -1,0 +1,50 @@
+%%@formatter:off
+sequenceDiagram
+    User ->> Intent: change field
+    activate User
+        Intent -->> Project: intentChanged: Intent
+        User ->> Variant: getVariants(intentId)
+        activate Variant
+            Variant ->> Project: getProject(intentId)
+            activate Project
+                Project ->> Intent: getIntent(intentId)
+                Project -->> Variant: getIntent: Intent
+            deactivate Project
+            Variant -->> User: getVariants: Variant[]
+        deactivate Variant
+        User ->> Variant: calculateVariant(variantId)
+            activate Variant
+            Variant ->> Variant: getVariant(variantId)
+            Variant ->> Project: getProject(intentId)
+            Variant ->> Variant: createFinancingRequest(Project, Variant)
+            Variant ->> Calculation: calculate($financingRequest):CommandId
+            activate Calculation
+                Calculation -->> Variant: calculateVariant: CommandId
+                Variant -->> User: calculateVariant: CommandId
+            deactivate Variant
+                User ->> Calculation: getResults(CommandId)
+                Calculation -->> User: getResults(CommandId): Result[]
+            deactivate Calculation
+        User ->> Offer: createOffer(intentId, variantId, calculationId)
+        activate Offer
+            Offer ->> Project: getProject(intentId)
+            Offer ->> Variant: getVariant(variantId)
+            Offer ->> Calculation: getCalculation(calculationId)
+            Offer ->> Offer: createOffer(Variant): Offer
+            Offer ->> Offer: createRevision(Project, Result): Offer
+            Offer -->> User: createOffer: Offer
+        deactivate Offer
+        User ->> Offer: acceptOffer(offerId)
+        activate Offer
+            Offer ->> Offer: changeStatus
+            Offer -->> User: acceptOffer: OfferId
+        deactivate Offer
+        User ->> Offer: submit(offerId)
+        activate Offer
+            Offer ->> Project: getProject(intentId): Project
+            Offer ->> Offer: validateForSubmission(Offer, Revision, Result)
+            Offer ->> Offer: validateForSubmission(Offer, Revision, Result)
+            Offer ->> Offer: createSubmissionRequest(Offer, Revision, Result)
+            Offer ->> Submission: createSubmission($submissionRequest)
+        deactivate Offer
+    deactivate User

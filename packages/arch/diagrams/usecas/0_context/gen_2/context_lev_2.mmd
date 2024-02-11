@@ -1,0 +1,54 @@
+C4Context
+    title System Context diagram for Internet Banking System
+
+    Enterprise_Boundary(baufi_platform, "Baufi Platform") {
+        Enterprise_Boundary(offer, "Offer") {
+            Container(view_offers, "Angebote", $type="view")
+            Container(offers, "Offers", $type="subdomain")
+
+            Rel(view_offers, offers, "uses")
+            Rel(offers, variants, "uses")
+            Rel(offers, calculation, "uses")
+            Rel(offers, submission, "calls")
+        }
+
+        Enterprise_Boundary(financing, "Financing") {
+            Enterprise_Boundary(variants, "Variants") {
+                Container(view_variant, "Variant", $type="view")
+                Container(variants, "Fivari", $type="service")
+
+                Rel(view_variant, variants, "uses")
+            }
+
+            Enterprise_Boundary(product, "Product") {
+                Container(view_calculation, "Result List", $type="view")
+                Container(calculation, "PCS", $type="service")
+
+                Rel(view_calculation, calculation, "uses")
+                Rel(calculation, variants, "uses")
+                Rel(calculation, core_data, "uses")
+            }
+        }
+
+        Enterprise_Boundary(submission, "Submission") {
+            Container(view_submission, "Einreichung", $type="view")
+            Container(submission, "Submission")
+
+
+            Rel(view_submission, submission, "uses")
+            Rel(submission, variants, "uses")
+            Rel(submission, calculation, "uses")
+            Rel(submission, submission, "calls")
+        }
+
+        Enterprise_Boundary(coreData, "Core Data") {
+            Container(view_stammdaten, "Stammdaten", $type="view")
+            Container(core_data, "Dateneingabe", $type="service")
+
+            Rel(view_stammdaten, core_data, "uses")
+        }
+
+    }
+
+
+    UpdateLayoutConfig($c4ShapeInRow="20", $c4BoundaryInRow="2")

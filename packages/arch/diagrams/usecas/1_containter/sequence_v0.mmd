@@ -1,0 +1,45 @@
+%%@formatter:off
+sequenceDiagram
+    User ->> Intent: change field
+    activate User
+        Intent -->> Project: intentChanged: Intent
+        User ->> Financing: getVariants(intentId)
+        activate Financing
+            Financing ->> Project: getProject(intentId)
+            activate Project
+                Project ->> Intent: getIntent(intentId)
+                Project -->> Financing: getIntent: Intent
+            deactivate Project
+            Financing -->> User: getVariants: Variant[]
+        deactivate Financing
+        User ->> Financing: calculateVariant(variantId)
+        activate Financing
+            Financing ->> Financing: getVariant(variantId)
+            Financing ->> Project: getProject(intentId)
+            Financing ->> Financing: createFinancingRequest(Project, Variant)
+            Financing ->> Financing: calculate($financingRequest)
+            Financing -->> User: calculateVariant: Result[]
+        deactivate Financing
+        User ->> Offer: createOffer(intentId, variantId, calculationId)
+        activate Offer
+            Offer ->> Project: getProject(intentId)
+            Offer ->> Financing: getVariant(variantId)
+            Offer ->> Financing: getCalculation(calculationId)
+            Offer ->> Offer: createOffer(Variant): Offer
+            Offer ->> Offer: createRevision(Project, Result): Offer
+            Offer -->> User: createOffer: Offer
+        deactivate Offer
+        User ->> Offer: acceptOffer(offerId)
+        activate Offer
+            Offer ->> Offer: changeStatus
+            Offer -->> User: acceptOffer: OfferId
+        deactivate Offer
+        User ->> Offer: submit(offerId)
+        activate Offer
+            Offer ->> Project: getProject(intentId): Project
+            Offer ->> Offer: validateForSubmission(Offer, Revision, Result)
+            Offer ->> Offer: validateForSubmission(Offer, Revision, Result)
+            Offer ->> Offer: createSubmissionRequest(Offer, Revision, Result)
+            Offer ->> Submission: createSubmission($submissionRequest)
+        deactivate Offer
+    deactivate User

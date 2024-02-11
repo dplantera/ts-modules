@@ -1,0 +1,32 @@
+C4Context
+    title System Context diagram for Internet Banking System
+
+    Person(user, "User", "berater, vermittler, kunden")
+
+    Boundary(bauf_platform, "Baufi Platform"){
+        System(baufi, "Baufi")
+    }
+
+    System(platform_integration, "Platform Integration", "Internal System, Partner Systems")
+
+    Boundary(provider, "Provider") {
+
+        Person(provider_employee, "Provider Employee")
+        System(provider_system, "Provider System")
+
+        Rel(provider_employee, provider_system, "uses")
+    }
+
+    Person(platform_user, "Platform User", "domain admins, support")
+
+    Rel(user, platform_integration, "uses")
+    Rel(user, baufi, "uses")
+    BiRel(platform_integration, baufi, "exchange")
+    Rel(platform_user, baufi, "interacts")
+
+    Rel_D(platform_user, baufi, "interacts")
+    Rel(provider_employee, baufi, "interacts")
+    BiRel(provider_system, baufi, "exchange")
+
+
+    UpdateLayoutConfig($c4ShapeInRow="4", $c4BoundaryInRow="1")
