@@ -1,21 +1,28 @@
 %%@formatter:off
 sequenceDiagram
+
     User ->> Intent: change field
     activate User
+
         Intent -->> Project: intentChanged: Intent
         User ->> Variant: getVariants(intentId)
         activate Variant
+        rect rgb(133, 133, 133)
+        note right of Intent: Cachable
             Variant ->> Project: getProject(intentId)
             activate Project
                 Project ->> Intent: getIntent(intentId)
                 Project -->> Variant: getIntent: Intent
             deactivate Project
+        end
             Variant -->> User: getVariants: Variant[]
         deactivate Variant
         User ->> Variant: calculateVariant(variantId)
             activate Variant
             Variant ->> Variant: getVariant(variantId)
-            Variant ->> Project: getProject(intentId)
+            rect rgb(133, 133, 133)
+                Variant ->> Project: getProject(intentId)
+            end
             Variant ->> Variant: createFinancingRequest(Project, Variant)
             Variant ->> Calculation: calculate($financingRequest):CommandId
             activate Calculation

@@ -1,46 +1,64 @@
 %%@formatter:off
 sequenceDiagram
-    User ->> Intent: change
     activate User
-    User ->> Variant: getVariants(intentId)
+        User ->> Intent: change
+        User ->> Variant: getVariants(intentId)
         activate Variant
+            rect rgb(133, 133, 133)
+            note right of Intent: cacheable
             Variant ->> Intent: getIntent(intentId)
+            end
             Variant -->> User: getVariants: Variant[]
         deactivate Variant
-        User ->> Calculation: calculateVariant(variantId): CommandId
+        rect rgb(46, 112, 160)
+        note left of Calculation: Calculation directly consumes <br>data from intent and variant
+
+        User -) Calculation: calculateVariant(variantId, intentId): CommandId
             activate Calculation
             Calculation ->> Variant: getVariant(variantId): Variant
             Calculation ->> Intent: getIntent(intentId): Intent
-            Calculation ->> Calculation: createFinancingRequest(Intent, Variant)
-            Calculation ->> Calculation: calculate($financingRequest):CommandId
-            User ->> Calculation: getResults(CommandId)
-            Calculation -->> User: getResults(CommandId): Result[]
+            Calculation --) User: getResults(CommandId): Result[]
             deactivate Calculation
-        User ->> Offer: createOffer(intentId, variantId, calculationId)
+        end
+        rect rgb(46, 112, 81)
+            User ->> Offer: createOffer(intentId, variantId, calculationId)
+            note left of Offer: Offer creation: Offer only persists IDs. <br>Data is stored from owners.
         activate Offer
-            Offer ->> Intent: saveSnapshot(intentId): 'intentId
-            Offer ->> Variant: saveSnapshot(variantId): 'variantId
-            Offer ->> Calculation: saveSnapshot(calculationId): 'calculationId
-            Offer ->> Offer: createOffer('intentId, 'variantId, 'calculationId): Offer
+            Offer ->>+ Intent: saveSnapshot(intentId): 'intentId
+%%          persist intent
+            Intent -->>- Offer: 'intentId
+
+%%          persist variant
+            Offer ->>+ Variant: saveSnapshot(variantId): 'variantId
+            Variant -->>- Offer: 'variantId
+
+%%          persist calculation
+            Offer ->>+ Calculation: saveSnapshot(calculationId): 'calculationId
+            Calculation -->>- Offer: 'intentId
+
             Offer -->> User: createOffer: Offer
+        end
         deactivate Offer
         User ->> Offer: acceptOffer(offerId)
         activate Offer
             Offer ->> Offer: changeStatus
             Offer -->> User: acceptOffer: OfferId
         deactivate Offer
+        rect rgb(133, 133, 133)
+          note left of Submission: Async Submission Request
         User ->> Offer: submit(offerId): STATUS_PENDING
         activate Offer
             Offer -) Submission: Event: SubmissionRequested('intentId, 'variantId, 'calculationId, 'offerId)
+        end
     deactivate Offer
     activate Submission
+    rect rgb(46, 112, 160)
+    note left of Submission: Submission directly consumes data <br> from sources
     Submission ->> Offer: getOffer('offerId)
     Submission ->> Calculation: getCalculation('calculationId): Calculation
     Submission ->> Intent: getIntent('intentId): Intent
     Submission ->> Variant: getVariant('variantId): Variant
-    Submission ->> Submission: createSubmission(Intent, Variant, Calculation): Submission
-    Submission ->> Submission: validateSubmission('variantId): Variant
-
+    end
     alt valid
         Submission --) Offer: Event: SubmissionCreated(offerId): submissionId
         activate Offer
@@ -53,6 +71,8 @@ sequenceDiagram
         Offer ->> Offer: changeStatus: Prüfung Notwendig
         deactivate Offer
     end
+
+
     activate Offer
         Offer --) User: Event: StatusChanged(offerId): Status
     deactivate Offer

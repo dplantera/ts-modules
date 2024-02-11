@@ -2,7 +2,7 @@
 sequenceDiagram
     User ->> Intent: change field
     activate User
-        Intent -->> Project: intentChanged: Intent
+        Intent --) Project: Event: IntentChanged: Intent
         User ->> Financing: getVariants(intentId)
         activate Financing
             Financing ->> Project: getProject(intentId)
