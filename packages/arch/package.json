@@ -4,27 +4,37 @@
   "version": "0.0.0",
   "type": "module",
   "author": "dsp",
-  "keywords": ["architecture"],
+  "keywords": [
+    "architecture"
+  ],
   "repository": {
     "type": "git",
     "directory": "packages/arch",
     "url": ""
   },
   "description": "Collection of ready to use tools to facilitate architecture process",
-  "files": [
-  ],
+  "files": [],
   "scripts": {
     "build": "run-s ts:build",
+    "serve": "node --loader ts-node/esm --watch src/server.ts src/server.ts",
+    "serve:watch": "node --loader ts-node/esm src/server.ts",
     "ts:build": "tsc -p tsconfig.build.json",
     "ts:check": "tsc",
     "test": "pnpm test:esm",
+    "docer:run": "docker run --platform linux/amd64 --publish 8000:8080 ghcr.io/mermaid-js/mermaid-live-editor",
     "test:esm": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
     "test:esm:update": "cross-env NODE_OPTIONS=--experimental-vm-modules jest -u",
     "clean": "rimraf dist out tmp",
-    "lint": "eslint \"./src/*.ts\" index.ts oa-cli.ts"
+    "lint": "eslint \"./src/*.ts\" index.ts oa-cli.ts",
+    "testt": "node --loader ts-node/esm src/index.ts"
   },
   "dependencies": {
-    "@dsp/node-sdk": "*"
+    "@dsp/node-sdk": "*",
+    "@mermaid-js/mermaid-cli": "^10.8.0",
+    "fastify": "^4.26.0",
+    "@fastify/static": "^7.0.1",
+    "mermaid": "^10.8.0",
+    "mmdc": "^0.0.1"
   },
   "devDependencies": {
     "axios": "^1.6.5",
@@ -33,6 +43,7 @@
     "eslint-plugin-n": "^15.0.0 || ^16.0.0 ",
     "eslint-plugin-promise": "^6.0.0",
     "npm-run-all": "*",
+    "ts-node": "^10.9.2",
     "tsconfig": "workspace:*",
     "type-fest": "*",
     "typescript": "*"
