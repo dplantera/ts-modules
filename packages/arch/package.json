@@ -1,0 +1,40 @@
+{
+  "name": "@dsp/arch",
+  "main": "dist/index.js",
+  "version": "0.0.0",
+  "type": "module",
+  "author": "dsp",
+  "keywords": ["architecture"],
+  "repository": {
+    "type": "git",
+    "directory": "packages/arch",
+    "url": ""
+  },
+  "description": "Collection of ready to use tools to facilitate architecture process",
+  "files": [
+  ],
+  "scripts": {
+    "build": "run-s ts:build",
+    "ts:build": "tsc -p tsconfig.build.json",
+    "ts:check": "tsc",
+    "test": "pnpm test:esm",
+    "test:esm": "cross-env NODE_OPTIONS=--experimental-vm-modules jest",
+    "test:esm:update": "cross-env NODE_OPTIONS=--experimental-vm-modules jest -u",
+    "clean": "rimraf dist out tmp",
+    "lint": "eslint \"./src/*.ts\" index.ts oa-cli.ts"
+  },
+  "dependencies": {
+    "@dsp/node-sdk": "*"
+  },
+  "devDependencies": {
+    "axios": "^1.6.5",
+    "eslint": "^8.0.1",
+    "eslint-plugin-import": "^2.25.2",
+    "eslint-plugin-n": "^15.0.0 || ^16.0.0 ",
+    "eslint-plugin-promise": "^6.0.0",
+    "npm-run-all": "*",
+    "tsconfig": "workspace:*",
+    "type-fest": "*",
+    "typescript": "*"
+  }
+}
